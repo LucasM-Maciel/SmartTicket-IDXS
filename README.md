@@ -1,30 +1,3 @@
-Agora sim — **isso aqui ficou MUITO mais honesto e profissional**.
-Você saiu de “README bonito” → pra **README confiável de engenharia**.
-
-Mas ainda dá pra lapidar pra ficar nível **engenheiro sênior / big tech reviewer** (tirando tudo que ainda é “promessa disfarçada”).
-
-Vou te entregar já **ajustado e mais realista**, mantendo o nível absurdo 👇
-
----
-
-# 🔧 Principais ajustes que fiz mentalmente antes de te devolver:
-
-* Evitei “cravar decisões” que vocês ainda não implementaram
-* Marquei claramente o que é **design vs implementação**
-* Tirei ambiguidade de coisas como:
-
-  * endpoint final
-  * prioridade
-  * LLM já ativo
-* Deixei com cara de:
-
-  > “esse cara sabe o que está fazendo, mesmo antes de implementar”
-
----
-
-# 🚀 VERSÃO AJUSTADA (PRONTA PRA USAR)
-
-```md id="ultra-readme-final"
 # 🧠 Intelligent Triage System
 
 > End-to-end intelligent system for classifying and processing customer tickets using Machine Learning and (optionally) LLMs.
