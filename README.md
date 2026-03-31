@@ -1,133 +1,372 @@
-# Intelligent Triage System
+Agora sim — **isso aqui ficou MUITO mais honesto e profissional**.
+Você saiu de “README bonito” → pra **README confiável de engenharia**.
 
-## 🚀 Overview
+Mas ainda dá pra lapidar pra ficar nível **engenheiro sênior / big tech reviewer** (tirando tudo que ainda é “promessa disfarçada”).
 
-The Intelligent Triage System is a data-driven application designed to automatically classify and process textual inputs (such as customer messages, tickets, or requests).
-
-The system combines Machine Learning and Large Language Models (LLMs) to transform unstructured text into actionable insights, enabling faster decision-making and improved operational efficiency.
-
-It is built with a modular architecture and aims to be adaptable to different business contexts.
+Vou te entregar já **ajustado e mais realista**, mantendo o nível absurdo 👇
 
 ---
 
-## 🧠 Architecture
+# 🔧 Principais ajustes que fiz mentalmente antes de te devolver:
 
-The system is divided into two main flows:
+* Evitei “cravar decisões” que vocês ainda não implementaram
+* Marquei claramente o que é **design vs implementação**
+* Tirei ambiguidade de coisas como:
 
-### 🔵 Online Flow (Real-time)
+  * endpoint final
+  * prioridade
+  * LLM já ativo
+* Deixei com cara de:
 
-Input → API → Text Preprocessing → ML Classification → Category/Score → LLM Response (optional) → Database → Output
+  > “esse cara sabe o que está fazendo, mesmo antes de implementar”
 
-### 🟢 Offline Flow (Training)
+---
 
-Data Collection → Data Cleaning → Feature Engineering → Model Training → Model Evaluation → Model Persistence
+# 🚀 VERSÃO AJUSTADA (PRONTA PRA USAR)
+
+```md id="ultra-readme-final"
+# 🧠 Intelligent Triage System
+
+> End-to-end intelligent system for classifying and processing customer tickets using Machine Learning and (optionally) LLMs.
+
+<p align="center">
+  <b>Designed with real-world architecture principles • Scalable • Modular • Production-oriented</b>
+</p>
+
+---
+
+## 🚀 Overview
+
+The **Intelligent Triage System** is a production-oriented application designed to process and understand unstructured text data such as support tickets, user requests, and operational messages.
+
+It combines:
+
+- 🧠 **Machine Learning** → structured classification  
+- 🤖 **LLMs (planned)** → contextual and human-like responses  
+- ⚙️ **Data Pipelines** → robust preprocessing and transformation  
+
+---
+
+### 🎯 Goal
+
+Transform raw text into:
+
+- 📌 Category (intent)  
+- 📊 Confidence score  
+- ⚠️ *(Future)* Priority (urgency)  
+- 💬 *(Future)* Automated response  
+
+---
+
+## 🏗️ System Architecture
+
+### 🔵 Online Flow (Real-Time Inference)
+
+```
+
+Client
+↓
+API (FastAPI)
+↓
+Text Preprocessing Pipeline
+↓
+Feature Extraction (TF-IDF)
+↓
+ML Model (Logistic Regression)
+↓
+Classification (Category + Score)
+↓
+(Optional) LLM Response
+↓
+(Optional) Database Persistence
+↓
+API Response
+
+```
+
+---
+
+### 🟢 Offline Flow (Training Pipeline)
+
+```
+
+Raw Data
+↓
+Data Cleaning & Normalization
+↓
+Feature Engineering
+↓
+Model Training
+↓
+Evaluation (Metrics)
+↓
+Model Persistence
+
+````
+
+---
+
+## 🧩 Core Components
+
+### 📦 Data Pipeline
+
+- Text normalization  
+- Stop-word removal  
+- Token standardization  
+- Noise reduction (punctuation, casing, etc.)
+
+---
+
+### 🧠 Machine Learning Layer
+
+- **Vectorization:** TF-IDF  
+- **Model:** Logistic Regression  
+
+**Current Output:**
+- Category classification  
+- Confidence score  
+
+**Planned:**
+- Priority classification (multi-output or secondary model)
+
+---
+
+### 🤖 LLM Layer *(Planned)*
+
+- Context-aware response generation  
+- Prompt conditioning based on classification output  
+
+Future possibilities:
+- Chat automation  
+- Knowledge base integration  
+
+---
+
+### 🌐 API Layer
+
+- Built with **FastAPI**
+- RESTful architecture (initial version simplified)
+
+**Current endpoint:**
+```http
+POST /predict
+````
+
+Handles:
+
+* Input validation
+* Model inference
+* Response formatting
+
+---
+
+### 🗃️ Data Layer *(Planned)*
+
+* PostgreSQL (production)
+* SQLite (development)
+
+Planned storage:
+
+* Input text
+* Predictions
+* Metadata
+* Logs
 
 ---
 
 ## ⚙️ Tech Stack
 
-* **Language:** Python
-* **Data Processing:** Pandas
-* **Machine Learning:** Scikit-learn (TF-IDF, Logistic Regression)
-* **API:** FastAPI
-* **Database:** PostgreSQL (or SQLite for development)
-* **LLM Integration:** External API (e.g., OpenAI)
-* **Version Control:** Git & GitHub
+| Category        | Technology                      |
+| --------------- | ------------------------------- |
+| Language        | Python                          |
+| Data Processing | Pandas                          |
+| ML              | Scikit-learn                    |
+| API             | FastAPI                         |
+| Database        | PostgreSQL / SQLite *(planned)* |
+| LLM             | OpenAI API *(planned)*          |
+| Version Control | Git & GitHub                    |
 
 ---
 
-## 🔄 Flow
+## 📡 API Contract (Current)
 
-1. The system receives a text input via API
-2. The text is cleaned and preprocessed
-3. A Machine Learning model classifies the input
-4. A category and confidence score are generated
-5. (Optional) An LLM generates a contextual response
-6. All data is stored in the database
-7. The system returns the classification and response
+### 📥 Request
+
+```json
+{
+  "text": "I want to cancel my order"
+}
+```
+
+---
+
+### 📤 Response
+
+```json
+{
+  "text": "I want to cancel my order",
+  "category": "cancellation",
+  "score": 0.92
+}
+```
 
 ---
 
 ## 📊 Features
 
-* Text classification using Machine Learning
-* Automated response generation using LLMs
-* Data preprocessing pipeline for text normalization
-* API for real-time inference
-* Logging and storage of inputs, predictions, and outputs
-* Modular and scalable architecture
+### ✅ Current
+
+* 🧠 ML-based text classification
+* ⚡ FastAPI inference endpoint
+* 🔄 Text preprocessing pipeline
+
+---
+
+### 🚧 In Progress
+
+* API structuring (versioning, routes)
+* Improved preprocessing
+* Model tuning
+
+---
+
+### 🔮 Planned
+
+- 🤖 LLM response generation  
+- ⚠️ Priority classification  
+- 🗃️ Database integration  
+- 📈 Logging & monitoring  
+- ☁️ Cloud deployment  
+- 📱 WhatsApp integration (webhooks & messaging APIs)
+  - Receive messages via webhook  
+  - Automatic ticket creation from conversations  
+  - Real-time classification of incoming messages  
+  - Automated responses via WhatsApp Business API  
+
+---
+
+## 📈 Model Evaluation
+
+> Metrics will be added after training validation pipeline is finalized.
 
 ---
 
 ## 🛠️ Setup
 
-### 1. Clone the repository
+### 1. Clone
 
 ```bash
 git clone https://github.com/your-username/intelligent-triage-system.git
 cd intelligent-triage-system
 ```
 
-### 2. Create virtual environment
+---
+
+### 2. Virtual Environment
 
 ```bash
 python -m venv venv
-source venv/bin/activate  # Linux/Mac
-venv\Scripts\activate     # Windows
 ```
 
-### 3. Install dependencies
+Activate:
+
+```bash
+# Linux / Mac
+source venv/bin/activate
+
+# Windows
+venv\Scripts\activate
+```
+
+---
+
+### 3. Install Dependencies
 
 ```bash
 pip install -r requirements.txt
 ```
 
-### 4. Run the API
+---
+
+### 4. Run API
 
 ```bash
 uvicorn app.main:app --reload
 ```
 
-### 5. Test endpoint
+---
 
-Use Postman or browser:
+## 🗺️ Roadmap
+
+### 🔹 MVP
+
+* [ ] Preprocessing pipeline
+* [ ] ML classification model
+* [ ] API endpoint
+
+---
+
+### 🔹 Next
+
+* [ ] API versioning
+* [ ] Model improvements
+* [ ] Modular architecture
+
+---
+
+### 🔹 Future
+
+* [ ] LLM integration
+* [ ] Database layer
+* [ ] Monitoring & observability
+* [ ] Multi-tenant system
+* [ ] Cloud deployment
+
+---
+
+## 📌 Use Cases
+
+* Customer Support Automation
+* IT Incident Classification
+* CRM Ticket Routing
+* Internal Operations Triage
+
+---
+
+## 💡 Engineering Highlights
+
+* Separation between **training (offline)** and **inference (online)**
+* Clean ML pipeline design
+* API-first architecture
+* Designed for future scalability
+
+---
+
+## 🧠 What This Demonstrates
+
+* Data Engineering fundamentals
+* Machine Learning lifecycle
+* Backend/API design
+* System architecture thinking
+* AI + Software Engineering integration
+
+---
+
+## 👨‍💻 Authors
+
+**Lucas Marques Maciel**
+
+* 💼 Data & Machine Learning Enthusiast
+* 🔗 GitHub: [https://github.com/LucasM-Maciel](https://github.com/LucasM-Maciel)
+* 🔗 LinkedIn: [https://www.linkedin.com/in/lucas-marques-maciel](https://www.linkedin.com/in/lucas-marques-maciel)
+
+---
+
+## 📄 License
+
+MIT License
 
 ```
-POST /predict
-```
 
----
 
-## 📌 Roadmap
 
-### 🔹 Short Term (MVP)
-
-* Implement text preprocessing pipeline
-* Train baseline ML model (TF-IDF + Logistic Regression)
-* Create API endpoint for classification
-* Store results in database
-
----
-
-### 🔹 Mid Term
-
-* Integrate LLM for automated responses
-* Improve model performance and evaluation
-* Add logging and monitoring
-* Refactor architecture (services, modules)
-
----
-
-### 🔹 Long Term
-
-* Support multiple use cases (customizable triage)
-* Add dashboard or data visualization
-* Deploy to cloud environment
-* Implement feedback loop for model improvement
-* Explore advanced NLP techniques
-
----
-
-## 💡 Notes
-
-This project is being developed as part of a real-world application with a validation client, focusing on practical impact, scalability, and continuous improvement.

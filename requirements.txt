@@ -1,0 +1,26 @@
+# --- Core API & Web Server ---
+fastapi
+uvicorn
+pydantic
+python-dotenv
+
+# --- Data Engineering & Machine Learning ---
+pandas
+numpy
+scikit-learn
+joblib
+
+# --- AI & LLM Integration ---
+# (For the Smart Ticket's automated response generation)
+openai
+langchain
+
+# --- Database & Persistence ---
+# (Support for SQL persistence and backend integration)
+sqlalchemy
+psycopg2-binary
+
+# --- Testing & Quality Assurance ---
+pytest
+httpx
+black  # For code formatting
