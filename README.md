@@ -339,7 +339,6 @@ uvicorn app.main:app --reload
 
 MIT License
 
-```
 
 
 
