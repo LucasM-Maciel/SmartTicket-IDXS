@@ -1,3 +1,4 @@
+```md
 # 🧠 Intelligent Triage System
 
 > End-to-end intelligent system for classifying, processing, and learning from customer tickets using Machine Learning and LLMs.
@@ -14,10 +15,10 @@ The **Intelligent Triage System** is a production-oriented application designed 
 
 It combines:
 
-* 🧠 **Machine Learning** → structured classification
-* 🤖 **LLMs (planned)** → contextual and human-like responses
-* ⚙️ **Data Pipelines** → robust preprocessing and transformation
-* 📊 **Data Layer** → analytics, monitoring, and continuous improvement
+- 🧠 **Machine Learning** → structured classification  
+- 🤖 **LLMs (planned)** → contextual and human-like responses  
+- ⚙️ **Data Pipelines** → robust preprocessing and transformation  
+- 📊 **Data Layer** → analytics, monitoring, and continuous improvement  
 
 ---
 
@@ -25,16 +26,16 @@ It combines:
 
 Transform raw text into:
 
-* 📌 Category (intent)
-* 📊 Confidence score
-* ⚠️ *(Future)* Priority (urgency)
-* 💬 *(Future)* Automated response
+- 📌 Category (intent)  
+- 📊 Confidence score  
+- ⚠️ *(Future)* Priority (urgency)  
+- 💬 *(Future)* Automated response  
 
 While also enabling:
 
-* 📈 Business insights
-* 🔁 Continuous learning
-* ⚙️ Operational optimization
+- 📈 Business insights  
+- 🔁 Continuous learning  
+- ⚙️ Operational optimization  
 
 ---
 
@@ -43,6 +44,7 @@ While also enabling:
 ### 🔵 Online Flow (Real-Time Inference)
 
 ```
+
 Client
 ↓
 API (FastAPI)
@@ -55,11 +57,12 @@ ML Model (Logistic Regression)
 ↓
 Classification (Category + Score)
 ↓
-LLM (Context-Aware Response) [Optional]
+(Optional) LLM Response
 ↓
-Database Persistence (Analytics & Learning)
+(Optional) Database Persistence
 ↓
 API Response
+
 ```
 
 ---
@@ -67,6 +70,7 @@ API Response
 ### 🟢 Offline Flow (Training Pipeline)
 
 ```
+
 Raw Data
 ↓
 Data Cleaning & Normalization
@@ -78,6 +82,7 @@ Model Training
 Evaluation (Metrics)
 ↓
 Model Persistence
+
 ```
 
 ---
@@ -86,26 +91,26 @@ Model Persistence
 
 ### 📦 Data Pipeline
 
-* Text normalization
-* Stop-word removal
-* Token standardization
-* Noise reduction (punctuation, casing, etc.)
+- Text normalization  
+- Stop-word removal *(if enabled)*  
+- Token standardization  
+- Noise reduction (punctuation, casing, etc.)  
 
 ---
 
 ### 🧠 Machine Learning Layer
 
-* **Vectorization:** TF-IDF
-* **Model:** Logistic Regression
+- **Vectorization:** TF-IDF  
+- **Model:** Logistic Regression  
 
 **Current Output:**
 
-* Category classification
-* Confidence score
+- Category classification  
+- Confidence score  
 
 **Planned:**
 
-* Priority classification (multi-output or secondary model)
+- Priority classification (multi-output or secondary model)
 
 ---
 
@@ -115,38 +120,40 @@ The LLM layer is designed to operate with **structured context from the ML model
 
 Instead of relying only on raw input, the LLM receives:
 
-* Predicted category
-* Confidence score
-* *(Future)* Priority level
+- Predicted category  
+- Confidence score  
+- *(Future)* Priority level  
 
 This hybrid approach ensures:
 
-* Higher response accuracy
-* Reduced hallucination risk
-* More controlled and consistent outputs
-* Better alignment with business logic
+- Higher response accuracy  
+- Reduced hallucination risk  
+- More controlled and consistent outputs  
+- Better alignment with business logic  
 
 #### Example Flow:
 
 ```
+
 User message
 → ML classification
 → Context injection (category + score)
 → LLM response generation
-```
+
+````
 
 ---
 
 ### 🌐 API Layer
 
-* Built with **FastAPI**
-* RESTful architecture (initial version simplified)
+- Built with **FastAPI**  
+- RESTful architecture (initial version simplified)  
 
 **Current endpoint:**
 
 ```http
 POST /predict
-```
+````
 
 Handles:
 
@@ -169,14 +176,14 @@ The system is designed to persist structured interaction data for **analytics an
 
 The system is not only designed for real-time inference but also for **data collection and intelligence generation**.
 
-Each interaction can store:
+Each interaction may store:
 
 * Raw input text
 * Processed text
 * Predicted category
 * Confidence score
 * *(Future)* Priority
-* LLM-generated response
+* *(Future)* LLM-generated response
 * Timestamps and metadata
 * *(Future)* Human-validated outcomes
 
@@ -371,6 +378,16 @@ uvicorn app.main:app --reload
 
 ---
 
+## 📄 Documentation
+
+* System Architecture → `docs/architecture.md`
+* API Contracts → `docs/api-contracts.md`
+* ML Notes → `docs/ml-notes.md`
+* Test Plan → `docs/test-plan.md`
+* Team Responsibilities → `docs/team-responsibilities.md`
+
+---
+
 ## 📌 Use Cases
 
 * Customer Support Automation
@@ -414,6 +431,4 @@ uvicorn app.main:app --reload
 ## 📄 License
 
 MIT License
-
----
 
