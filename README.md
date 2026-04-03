@@ -1,4 +1,3 @@
-```md
 # 🧠 Intelligent Triage System
 
 > End-to-end intelligent system for classifying, processing, and learning from customer tickets using Machine Learning and LLMs.
@@ -15,10 +14,10 @@ The **Intelligent Triage System** is a production-oriented application designed 
 
 It combines:
 
-- 🧠 **Machine Learning** → structured classification  
-- 🤖 **LLMs (planned)** → contextual and human-like responses  
-- ⚙️ **Data Pipelines** → robust preprocessing and transformation  
-- 📊 **Data Layer** → analytics, monitoring, and continuous improvement  
+- 🧠 **Machine Learning** → structured classification
+- 🤖 **LLMs (planned)** → contextual and human-like responses
+- ⚙️ **Data Pipelines** → robust preprocessing and transformation
+- 📊 **Data Layer** → analytics, monitoring, and continuous improvement
 
 ---
 
@@ -26,16 +25,16 @@ It combines:
 
 Transform raw text into:
 
-- 📌 Category (intent)  
-- 📊 Confidence score  
-- ⚠️ *(Future)* Priority (urgency)  
-- 💬 *(Future)* Automated response  
+- 📌 Category (intent)
+- 📊 Confidence score
+- ⚠️ *(Future)* Priority (urgency)
+- 💬 *(Future)* Automated response
 
 While also enabling:
 
-- 📈 Business insights  
-- 🔁 Continuous learning  
-- ⚙️ Operational optimization  
+- 📈 Business insights
+- 🔁 Continuous learning
+- ⚙️ Operational optimization
 
 ---
 
@@ -43,8 +42,7 @@ While also enabling:
 
 ### 🔵 Online Flow (Real-Time Inference)
 
-```
-
+```text
 Client
 ↓
 API (FastAPI)
@@ -62,15 +60,13 @@ Classification (Category + Score)
 (Optional) Database Persistence
 ↓
 API Response
-
 ```
 
 ---
 
 ### 🟢 Offline Flow (Training Pipeline)
 
-```
-
+```text
 Raw Data
 ↓
 Data Cleaning & Normalization
@@ -82,7 +78,6 @@ Model Training
 Evaluation (Metrics)
 ↓
 Model Persistence
-
 ```
 
 ---
@@ -91,22 +86,22 @@ Model Persistence
 
 ### 📦 Data Pipeline
 
-- Text normalization  
-- Stop-word removal *(if enabled)*  
-- Token standardization  
-- Noise reduction (punctuation, casing, etc.)  
+- Text normalization
+- Stop-word removal *(if enabled)*
+- Token standardization
+- Noise reduction (punctuation, casing, etc.)
 
 ---
 
 ### 🧠 Machine Learning Layer
 
-- **Vectorization:** TF-IDF  
-- **Model:** Logistic Regression  
+- **Vectorization:** TF-IDF
+- **Model:** Logistic Regression
 
 **Current Output:**
 
-- Category classification  
-- Confidence score  
+- Category classification
+- Confidence score
 
 **Planned:**
 
@@ -120,53 +115,51 @@ The LLM layer is designed to operate with **structured context from the ML model
 
 Instead of relying only on raw input, the LLM receives:
 
-- Predicted category  
-- Confidence score  
-- *(Future)* Priority level  
+- Predicted category
+- Confidence score
+- *(Future)* Priority level
 
 This hybrid approach ensures:
 
-- Higher response accuracy  
-- Reduced hallucination risk  
-- More controlled and consistent outputs  
-- Better alignment with business logic  
+- Higher response accuracy
+- Reduced hallucination risk
+- More controlled and consistent outputs
+- Better alignment with business logic
 
-#### Example Flow:
+#### Example Flow
 
-```
-
+```text
 User message
 → ML classification
 → Context injection (category + score)
 → LLM response generation
-
-````
+```
 
 ---
 
 ### 🌐 API Layer
 
-- Built with **FastAPI**  
-- RESTful architecture (initial version simplified)  
+- Built with **FastAPI**
+- RESTful architecture (initial version simplified)
 
 **Current endpoint:**
 
 ```http
 POST /predict
-````
+```
 
 Handles:
 
-* Input validation
-* Model inference
-* Response formatting
+- Input validation
+- Model inference
+- Response formatting
 
 ---
 
 ### 🗃️ Data Layer *(Planned)*
 
-* PostgreSQL (production)
-* SQLite (development)
+- PostgreSQL (production)
+- SQLite (development)
 
 The system is designed to persist structured interaction data for **analytics and continuous improvement**.
 
@@ -178,14 +171,14 @@ The system is not only designed for real-time inference but also for **data coll
 
 Each interaction may store:
 
-* Raw input text
-* Processed text
-* Predicted category
-* Confidence score
-* *(Future)* Priority
-* *(Future)* LLM-generated response
-* Timestamps and metadata
-* *(Future)* Human-validated outcomes
+- Raw input text
+- Processed text
+- Predicted category
+- Confidence score
+- *(Future)* Priority
+- *(Future)* LLM-generated response
+- Timestamps and metadata
+- *(Future)* Human-validated outcomes
 
 ---
 
@@ -193,23 +186,20 @@ Each interaction may store:
 
 This enables:
 
-* 📈 Business analytics
+- 📈 Business analytics
+  - Most frequent issues
+  - Demand peaks
+  - Category distribution
 
-  * Most frequent issues
-  * Demand peaks
-  * Category distribution
+- 🧠 Continuous model improvement
+  - Retraining with real-world data
+  - Error correction
 
-* 🧠 Continuous model improvement
+- 🔍 Model evaluation and auditing
 
-  * Retraining with real-world data
-  * Error correction
-
-* 🔍 Model evaluation and auditing
-
-* ⚙️ Operational insights
-
-  * Support team optimization
-  * SLA improvements
+- ⚙️ Operational insights
+  - Support team optimization
+  - SLA improvements
 
 ---
 
@@ -227,15 +217,15 @@ The system evolves through a continuous learning cycle:
 
 ## ⚙️ Tech Stack
 
-| Category        | Technology                      |
-| --------------- | ------------------------------- |
-| Language        | Python                          |
-| Data Processing | Pandas                          |
-| ML              | Scikit-learn                    |
-| API             | FastAPI                         |
-| Database        | PostgreSQL / SQLite *(planned)* |
-| LLM             | OpenAI API *(planned)*          |
-| Version Control | Git & GitHub                    |
+| Category | Technology |
+|---|---|
+| Language | Python |
+| Data Processing | Pandas |
+| ML | Scikit-learn |
+| API | FastAPI |
+| Database | PostgreSQL / SQLite *(planned)* |
+| LLM | OpenAI API *(planned)* |
+| Version Control | Git & GitHub |
 
 ---
 
@@ -267,28 +257,28 @@ The system evolves through a continuous learning cycle:
 
 ### ✅ Current
 
-* 🧠 ML-based text classification
-* ⚡ FastAPI inference endpoint
-* 🔄 Text preprocessing pipeline
+- 🧠 ML-based text classification
+- ⚡ FastAPI inference endpoint
+- 🔄 Text preprocessing pipeline
 
 ---
 
 ### 🚧 In Progress
 
-* API structuring (versioning, routes)
-* Improved preprocessing
-* Model tuning
+- API structuring (versioning, routes)
+- Improved preprocessing
+- Model tuning
 
 ---
 
 ### 🔮 Planned
 
-* 🤖 LLM response generation
-* ⚠️ Priority classification
-* 🗃️ Database integration
-* 📈 Logging & monitoring
-* ☁️ Cloud deployment
-* 📱 WhatsApp integration (webhooks & messaging APIs)
+- 🤖 LLM response generation
+- ⚠️ Priority classification
+- 🗃️ Database integration
+- 📈 Logging & monitoring
+- ☁️ Cloud deployment
+- 📱 WhatsApp integration (webhooks & messaging APIs)
 
 ---
 
@@ -298,10 +288,10 @@ The system evolves through a continuous learning cycle:
 
 Planned metrics:
 
-* Accuracy
-* Precision / Recall / F1-score
-* Confusion matrix
-* Business-oriented metrics (resolution success, response time)
+- Accuracy
+- Precision / Recall / F1-score
+- Confusion matrix
+- Business-oriented metrics (resolution success, response time)
 
 ---
 
@@ -354,67 +344,67 @@ uvicorn app.main:app --reload
 
 ### 🔹 MVP
 
-* [ ] Preprocessing pipeline
-* [ ] ML classification model
-* [ ] API endpoint
+- [ ] Preprocessing pipeline
+- [ ] ML classification model
+- [ ] API endpoint
 
 ---
 
 ### 🔹 Next
 
-* [ ] API versioning
-* [ ] Model improvements
-* [ ] Modular architecture
+- [ ] API versioning
+- [ ] Model improvements
+- [ ] Modular architecture
 
 ---
 
 ### 🔹 Future
 
-* [ ] LLM integration
-* [ ] Database layer
-* [ ] Monitoring & observability
-* [ ] Multi-tenant system
-* [ ] Cloud deployment
+- [ ] LLM integration
+- [ ] Database layer
+- [ ] Monitoring & observability
+- [ ] Multi-tenant system
+- [ ] Cloud deployment
 
 ---
 
 ## 📄 Documentation
 
-* System Architecture → `docs/architecture.md`
-* API Contracts → `docs/api-contracts.md`
-* ML Notes → `docs/ml-notes.md`
-* Test Plan → `docs/test-plan.md`
-* Team Responsibilities → `docs/team-responsibilities.md`
+- System Architecture → `docs/architecture.md`
+- API Contracts → `docs/api-contracts.md`
+- ML Notes → `docs/ml-notes.md`
+- Test Plan → `docs/test-plan.md`
+- Team Responsibilities → `docs/team-responsibilities.md`
 
 ---
 
 ## 📌 Use Cases
 
-* Customer Support Automation
-* IT Incident Classification
-* CRM Ticket Routing
-* Internal Operations Triage
+- Customer Support Automation
+- IT Incident Classification
+- CRM Ticket Routing
+- Internal Operations Triage
 
 ---
 
 ## 💡 Engineering Highlights
 
-* Separation between **training (offline)** and **inference (online)**
-* Hybrid AI architecture (ML + LLM)
-* Data-driven feedback loop
-* API-first design
-* Designed for scalability and production use
+- Separation between **training (offline)** and **inference (online)**
+- Hybrid AI architecture (ML + LLM)
+- Data-driven feedback loop
+- API-first design
+- Designed for scalability and production use
 
 ---
 
 ## 🧠 What This Demonstrates
 
-* Data Engineering fundamentals
-* Machine Learning lifecycle
-* Backend/API development
-* System architecture thinking
-* AI system design (not just usage)
-* Real-world product mindset
+- Data Engineering fundamentals
+- Machine Learning lifecycle
+- Backend/API development
+- System architecture thinking
+- AI system design (not just usage)
+- Real-world product mindset
 
 ---
 
@@ -422,13 +412,12 @@ uvicorn app.main:app --reload
 
 **Lucas Marques Maciel**
 
-* 💼 Data & Machine Learning Enthusiast
-* 🔗 GitHub: [https://github.com/LucasM-Maciel](https://github.com/LucasM-Maciel)
-* 🔗 LinkedIn: [https://www.linkedin.com/in/lucas-marques-maciel](https://www.linkedin.com/in/lucas-marques-maciel)
+- 💼 Data & Machine Learning Enthusiast
+- 🔗 GitHub: [https://github.com/LucasM-Maciel](https://github.com/LucasM-Maciel)
+- 🔗 LinkedIn: [https://www.linkedin.com/in/lucas-marques-maciel](https://www.linkedin.com/in/lucas-marques-maciel)
 
 ---
 
 ## 📄 License
 
 MIT License
-
