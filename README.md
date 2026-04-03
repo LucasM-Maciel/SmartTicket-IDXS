@@ -1,9 +1,9 @@
 # 🧠 Intelligent Triage System
 
-> End-to-end intelligent system for classifying and processing customer tickets using Machine Learning and (optionally) LLMs.
+> End-to-end intelligent system for classifying, processing, and learning from customer tickets using Machine Learning and LLMs.
 
 <p align="center">
-  <b>Designed with real-world architecture principles • Scalable • Modular • Production-oriented</b>
+  <b>Built with real-world architecture principles • Scalable • Modular • Production-oriented</b>
 </p>
 
 ---
@@ -14,9 +14,10 @@ The **Intelligent Triage System** is a production-oriented application designed 
 
 It combines:
 
-- 🧠 **Machine Learning** → structured classification  
-- 🤖 **LLMs (planned)** → contextual and human-like responses  
-- ⚙️ **Data Pipelines** → robust preprocessing and transformation  
+* 🧠 **Machine Learning** → structured classification
+* 🤖 **LLMs (planned)** → contextual and human-like responses
+* ⚙️ **Data Pipelines** → robust preprocessing and transformation
+* 📊 **Data Layer** → analytics, monitoring, and continuous improvement
 
 ---
 
@@ -24,10 +25,16 @@ It combines:
 
 Transform raw text into:
 
-- 📌 Category (intent)  
-- 📊 Confidence score  
-- ⚠️ *(Future)* Priority (urgency)  
-- 💬 *(Future)* Automated response  
+* 📌 Category (intent)
+* 📊 Confidence score
+* ⚠️ *(Future)* Priority (urgency)
+* 💬 *(Future)* Automated response
+
+While also enabling:
+
+* 📈 Business insights
+* 🔁 Continuous learning
+* ⚙️ Operational optimization
 
 ---
 
@@ -36,7 +43,6 @@ Transform raw text into:
 ### 🔵 Online Flow (Real-Time Inference)
 
 ```
-
 Client
 ↓
 API (FastAPI)
@@ -49,12 +55,11 @@ ML Model (Logistic Regression)
 ↓
 Classification (Category + Score)
 ↓
-(Optional) LLM Response
+LLM (Context-Aware Response) [Optional]
 ↓
-(Optional) Database Persistence
+Database Persistence (Analytics & Learning)
 ↓
 API Response
-
 ```
 
 ---
@@ -62,7 +67,6 @@ API Response
 ### 🟢 Offline Flow (Training Pipeline)
 
 ```
-
 Raw Data
 ↓
 Data Cleaning & Normalization
@@ -74,8 +78,7 @@ Model Training
 Evaluation (Metrics)
 ↓
 Model Persistence
-
-````
+```
 
 ---
 
@@ -83,47 +86,67 @@ Model Persistence
 
 ### 📦 Data Pipeline
 
-- Text normalization  
-- Stop-word removal  
-- Token standardization  
-- Noise reduction (punctuation, casing, etc.)
+* Text normalization
+* Stop-word removal
+* Token standardization
+* Noise reduction (punctuation, casing, etc.)
 
 ---
 
 ### 🧠 Machine Learning Layer
 
-- **Vectorization:** TF-IDF  
-- **Model:** Logistic Regression  
+* **Vectorization:** TF-IDF
+* **Model:** Logistic Regression
 
 **Current Output:**
-- Category classification  
-- Confidence score  
+
+* Category classification
+* Confidence score
 
 **Planned:**
-- Priority classification (multi-output or secondary model)
+
+* Priority classification (multi-output or secondary model)
 
 ---
 
 ### 🤖 LLM Layer *(Planned)*
 
-- Context-aware response generation  
-- Prompt conditioning based on classification output  
+The LLM layer is designed to operate with **structured context from the ML model**, not as a standalone black box.
 
-Future possibilities:
-- Chat automation  
-- Knowledge base integration  
+Instead of relying only on raw input, the LLM receives:
+
+* Predicted category
+* Confidence score
+* *(Future)* Priority level
+
+This hybrid approach ensures:
+
+* Higher response accuracy
+* Reduced hallucination risk
+* More controlled and consistent outputs
+* Better alignment with business logic
+
+#### Example Flow:
+
+```
+User message
+→ ML classification
+→ Context injection (category + score)
+→ LLM response generation
+```
 
 ---
 
 ### 🌐 API Layer
 
-- Built with **FastAPI**
-- RESTful architecture (initial version simplified)
+* Built with **FastAPI**
+* RESTful architecture (initial version simplified)
 
 **Current endpoint:**
+
 ```http
 POST /predict
-````
+```
 
 Handles:
 
@@ -138,12 +161,60 @@ Handles:
 * PostgreSQL (production)
 * SQLite (development)
 
-Planned storage:
+The system is designed to persist structured interaction data for **analytics and continuous improvement**.
 
-* Input text
-* Predictions
-* Metadata
-* Logs
+---
+
+## 📊 Data & Analytics Layer
+
+The system is not only designed for real-time inference but also for **data collection and intelligence generation**.
+
+Each interaction can store:
+
+* Raw input text
+* Processed text
+* Predicted category
+* Confidence score
+* *(Future)* Priority
+* LLM-generated response
+* Timestamps and metadata
+* *(Future)* Human-validated outcomes
+
+---
+
+### 🎯 Purpose
+
+This enables:
+
+* 📈 Business analytics
+
+  * Most frequent issues
+  * Demand peaks
+  * Category distribution
+
+* 🧠 Continuous model improvement
+
+  * Retraining with real-world data
+  * Error correction
+
+* 🔍 Model evaluation and auditing
+
+* ⚙️ Operational insights
+
+  * Support team optimization
+  * SLA improvements
+
+---
+
+### 🔁 Feedback Loop
+
+The system evolves through a continuous learning cycle:
+
+1. Collect real interactions
+2. Store predictions and outcomes
+3. Compare predicted vs actual results
+4. Improve model and prompts
+5. Redeploy improved versions
 
 ---
 
@@ -205,22 +276,25 @@ Planned storage:
 
 ### 🔮 Planned
 
-- 🤖 LLM response generation  
-- ⚠️ Priority classification  
-- 🗃️ Database integration  
-- 📈 Logging & monitoring  
-- ☁️ Cloud deployment  
-- 📱 WhatsApp integration (webhooks & messaging APIs)
-  - Receive messages via webhook  
-  - Automatic ticket creation from conversations  
-  - Real-time classification of incoming messages  
-  - Automated responses via WhatsApp Business API  
+* 🤖 LLM response generation
+* ⚠️ Priority classification
+* 🗃️ Database integration
+* 📈 Logging & monitoring
+* ☁️ Cloud deployment
+* 📱 WhatsApp integration (webhooks & messaging APIs)
 
 ---
 
 ## 📈 Model Evaluation
 
-> Metrics will be added after training validation pipeline is finalized.
+> Metrics will be added after validation pipeline is finalized.
+
+Planned metrics:
+
+* Accuracy
+* Precision / Recall / F1-score
+* Confusion matrix
+* Business-oriented metrics (resolution success, response time)
 
 ---
 
@@ -309,9 +383,10 @@ uvicorn app.main:app --reload
 ## 💡 Engineering Highlights
 
 * Separation between **training (offline)** and **inference (online)**
-* Clean ML pipeline design
-* API-first architecture
-* Designed for future scalability
+* Hybrid AI architecture (ML + LLM)
+* Data-driven feedback loop
+* API-first design
+* Designed for scalability and production use
 
 ---
 
@@ -319,9 +394,10 @@ uvicorn app.main:app --reload
 
 * Data Engineering fundamentals
 * Machine Learning lifecycle
-* Backend/API design
+* Backend/API development
 * System architecture thinking
-* AI + Software Engineering integration
+* AI system design (not just usage)
+* Real-world product mindset
 
 ---
 
@@ -339,6 +415,5 @@ uvicorn app.main:app --reload
 
 MIT License
 
-
-
+---
 
