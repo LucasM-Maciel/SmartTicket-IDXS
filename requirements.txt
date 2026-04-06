@@ -9,6 +9,7 @@ pandas
 numpy
 scikit-learn
 joblib
+nltk
 
 # --- AI & LLM Integration ---
 # (For the Smart Ticket's automated response generation)

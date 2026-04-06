@@ -40,18 +40,20 @@
 ### What was done
 - Created skeleton of `app/utils/text_cleaning.py`
 - Implemented `clean_text` function: lowercase, strip, remove symbols via regex, normalize whitespace
+- Implemented `normalize_text` in `app/utils/normalizer.py`: removes stopwords via NLTK with configurable language parameter
 
 ### Problems
-- Function would fail if input was not a string (e.g. NaN, None from the dataset)
+- `clean_text`: function would fail if input was not a string (e.g. NaN, None from the dataset)
+- `normalize_text`: challenge was keeping the code clean and readable while handling edge cases properly
 
 ### Solutions
-- Added type check at the start of the function: non-string inputs return an empty string instead of raising an error
-- Empty string is safe for the ML pipeline and avoids constant exceptions during model feeding
+- Non-string inputs return empty string in both functions — safe for the pipeline and avoids constant exceptions
+- `LookupError` caught on NLTK corpus load: prints download instructions and returns empty string gracefully
 
 ### Learnings
 - Regex is more powerful than expected — learned new patterns during implementation
+- Learned more about string manipulation in Python
 - Defensive input handling is better than error propagation in pipeline contexts
 
 ### Next Steps
-- Implement `normalize_text` (in progress today)
-- `normalize_text` is still part of the clean stage of the pipeline
+- Implement `pipeline.py` connecting `clean_text` → `normalize_text` → vectorizer → model
