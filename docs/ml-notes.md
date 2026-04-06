@@ -8,10 +8,13 @@ Classify customer messages into predefined categories
 
 ## Categories (Initial)
 
-- support  
-- financial  
-- complaint  
-- cancellation  
+- technical_issue
+- billing_inquiry
+- refund_request
+- cancellation_request
+- product_inquiry
+
+Source: `customer_support_tickets.csv` → column `Ticket Type`
 
 ---
 
@@ -31,7 +34,8 @@ text → clean → normalize → vectorize (TF-IDF) → model
 
 ## Features
 
-* TF-IDF vectors
+* TF-IDF vectors (primary input: `Ticket Description`)
+* Future: combine `Ticket Subject` + `Ticket Description`
 
 ---
 
@@ -48,6 +52,12 @@ text → clean → normalize → vectorize (TF-IDF) → model
 
 * Project structure created
 * Pipeline defined (not fully implemented yet)
+* Dataset sourced: `customer_support_tickets.csv` (8.469 rows, 5 balanced classes)
+* Input column: `Ticket Description`
+* Label column: `Ticket Type`
+* `clean_text` implemented in `app/utils/text_cleaning.py` (lowercase, strip, regex symbol removal, whitespace normalization)
+* `normalize_text` implemented in `app/utils/normalizer.py` (stopword removal via NLTK, configurable language, defaults to English)
+* Non-string inputs handled in both functions: returns empty string to keep pipeline safe
 
 ---
 
