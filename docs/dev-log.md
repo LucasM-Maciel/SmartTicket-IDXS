@@ -57,3 +57,31 @@
 
 ### Next Steps
 - Implement `pipeline.py` connecting `clean_text` → `normalize_text` → vectorizer → model
+
+---
+
+## 2026-04-07 (Lucas)
+
+### What was done
+- Implemented `app/services/pipeline.py`: `run_pipeline` connects `clean_text` → `normalize_text`
+- Implemented `app/ml/train.py`: loads dataset, applies pipeline, trains TF-IDF + Logistic Regression, saves model and vectorizer artifacts via `joblib`
+- Implemented `app/ml/predict.py`: loads saved artifacts and returns predicted category + confidence score for a given text
+- Ran first model training against `customer_support_tickets.csv`
+- Updated `run_pipeline` in `app/services/pipeline.py` to accept a `language` parameter (default: `"english"`), enabling future Portuguese support
+
+### Problems
+- Dataset is synthetic: ticket descriptions have no clear semantic relationship with the labels, making it impossible to assess real model accuracy
+- `predict.py` depends on artifacts existing — if `train.py` hasn't run yet, it would crash at import time
+
+### Solutions
+- `FileNotFoundError` caught at module load in `predict.py`: exits with a clear message instructing the user to run `train.py` first
+- Dataset issue flagged for replacement — current results are not representative of real-world performance
+
+### Learnings
+- Learned the basics of TF-IDF vectorization and Logistic Regression in Scikit-learn
+- Synthetic datasets can produce misleading metrics — data quality is critical before trusting any model evaluation
+- Multilingual support requires separate models per language — a single model cannot handle both English and Portuguese reliably
+
+### Next Steps
+- Find a better (real) dataset to replace `customer_support_tickets.csv`
+- Find a Portuguese dataset and train a separate Portuguese model to enable multilingual support
