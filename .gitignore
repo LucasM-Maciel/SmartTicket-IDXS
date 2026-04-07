@@ -210,3 +210,4 @@ venv/
 .env
 __pycache__/
 *.pkl
+app/data/raw/*.csv
