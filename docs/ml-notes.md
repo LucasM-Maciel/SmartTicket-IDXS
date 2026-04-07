@@ -57,6 +57,7 @@ text → clean → normalize → vectorize (TF-IDF) → model
 * Label column: `Ticket Type`
 * `clean_text` implemented in `app/utils/text_cleaning.py` (lowercase, strip, regex symbol removal, whitespace normalization)
 * `normalize_text` implemented in `app/utils/normalizer.py` (stopword removal via NLTK, configurable language, defaults to English)
+* `run_pipeline` implemented in `app/services/pipeline.py` (orchestrates `clean_text` → `normalize_text`)
 * Non-string inputs handled in both functions: returns empty string to keep pipeline safe
 
 ---

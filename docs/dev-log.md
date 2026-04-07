@@ -57,3 +57,23 @@
 
 ### Next Steps
 - Implement `pipeline.py` connecting `clean_text` → `normalize_text` → vectorizer → model
+
+---
+
+## 2026-04-07 (Lucas)
+
+### What was done
+- Implemented `app/services/pipeline.py`
+- `run_pipeline` function connects `clean_text` → `normalize_text` in sequence and returns the preprocessed text
+
+### Problems
+- None
+
+### Solutions
+- N/A
+
+### Learnings
+- None (straightforward implementation)
+
+### Next Steps
+- Continue ML pipeline implementation
