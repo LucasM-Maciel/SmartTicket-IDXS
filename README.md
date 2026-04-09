@@ -43,23 +43,27 @@ While also enabling:
 ### 🔵 Online Flow (Real-Time Inference)
 
 ```text
-Client
+Customer sends message on WhatsApp
 ↓
-API (FastAPI)
+WhatsApp Business API → webhook
 ↓
-Text Preprocessing Pipeline
+FastAPI: validate + save contact/ticket
 ↓
-Feature Extraction (TF-IDF)
+Text Preprocessing Pipeline (clean → normalize → vectorize)
 ↓
-ML Model (Logistic Regression)
+ML Model (TF-IDF + Logistic Regression)
 ↓
-Classification (Category + Score)
+Category + Confidence Score
 ↓
-(Optional) LLM Response
+Score ≥ 0.75?
+├─ Yes → LLM attempts resolution → resolved or escalated
+└─ No  → Human queue (low confidence)
 ↓
-(Optional) Database Persistence
+Agent responds via SmartTicket interface
 ↓
-API Response
+System delivers response via WhatsApp API
+↓
+Everything stored → analytics + model retraining
 ```
 
 ---
@@ -221,10 +225,14 @@ The system evolves through a continuous learning cycle:
 |---|---|
 | Language | Python |
 | Data Processing | Pandas |
-| ML | Scikit-learn |
+| ML | Scikit-learn (TF-IDF + Logistic Regression) |
 | API | FastAPI |
-| Database | PostgreSQL / SQLite *(planned)* |
+| Database | PostgreSQL — Supabase (MVP), Railway/RDS (production) |
 | LLM | OpenAI API *(planned)* |
+| WhatsApp | Z-API / Twilio *(planned)* |
+| Real-time | WebSockets via FastAPI — polling for demo |
+| Agent Interface | Streamlit (demo) → React / Next.js (production) |
+| Scheduled Jobs | APScheduler *(planned)* |
 | Version Control | Git & GitHub |
 
 ---
@@ -257,34 +265,37 @@ The system evolves through a continuous learning cycle:
 
 ### ✅ Current
 
-- 🧠 ML-based text classification
-- ⚡ FastAPI inference endpoint
-- 🔄 Text preprocessing pipeline
+- 🔄 Text preprocessing pipeline (`clean_text` → `normalize_text` → `run_pipeline`)
+- 🧠 TF-IDF + Logistic Regression model (training + inference implemented)
+- 📦 Model and vectorizer persistence via `joblib`
+- 🌐 Multilingual pipeline support (`language` parameter, English default)
 
 ---
 
 ### 🚧 In Progress
 
-- API structuring (versioning, routes)
-- Improved preprocessing
-- Model tuning
+- API layer (FastAPI — `POST /predict` endpoint)
+- Real-world dataset sourcing (current dataset is synthetic)
+- Model evaluation with reliable data
 
 ---
 
 ### 🔮 Planned
 
-- 🤖 LLM response generation
-- ⚠️ Priority classification
-- 🗃️ Database integration
-- 📈 Logging & monitoring
+- 🤖 LLM automatic resolution (with structured ML context)
+- ⚠️ Dynamic priority + priority aging queue
+- 🗃️ Database integration (PostgreSQL)
+- 📱 WhatsApp Business API integration (Z-API / Twilio)
+- 🖥️ Agent interface (Streamlit demo → React production)
+- 🔁 Feedback loop + automatic model retraining
+- 📈 Monthly analytics report
 - ☁️ Cloud deployment
-- 📱 WhatsApp integration (webhooks & messaging APIs)
 
 ---
 
 ## 📈 Model Evaluation
 
-> Metrics will be added after validation pipeline is finalized.
+> First training run completed. Metrics are not yet reliable — current dataset is synthetic and ticket descriptions have no clear semantic relationship with the labels.
 
 Planned metrics:
 
@@ -292,6 +303,8 @@ Planned metrics:
 - Precision / Recall / F1-score
 - Confusion matrix
 - Business-oriented metrics (resolution success, response time)
+
+> ⚠️ Evaluation will be meaningful only after replacing the dataset with real-world data.
 
 ---
 
@@ -344,8 +357,8 @@ uvicorn app.main:app --reload
 
 ### 🔹 MVP
 
-- [ ] Preprocessing pipeline
-- [ ] ML classification model
+- [x] Preprocessing pipeline
+- [x] ML classification model
 - [ ] API endpoint
 
 ---

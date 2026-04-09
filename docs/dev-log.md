@@ -68,6 +68,11 @@
 - Implemented `app/ml/predict.py`: loads saved artifacts and returns predicted category + confidence score for a given text
 - Ran first model training against `customer_support_tickets.csv`
 - Updated `run_pipeline` in `app/services/pipeline.py` to accept a `language` parameter (default: `"english"`), enabling future Portuguese support
+- Created `docs/product-vision-pt.md` and `docs/product-vision-en.md`: complete product vision defining system flow, LLM layer, priority logic, human queue, agent interface, database structure, business model and deployment strategy
+- Updated `docs/project-context.md`: expanded with full product definition, key decisions, complete development order with status, and timeline
+- Updated `docs/ml-notes.md`: added confidence threshold, multi-message classification strategy (Approach A/B), and feedback loop
+- Updated `docs/architecture.md`: expanded online flow, added database structure and full tech stack
+- Updated `README.md`: updated system architecture, tech stack, and planned features to reflect full product vision
 
 ### Problems
 - Dataset is synthetic: ticket descriptions have no clear semantic relationship with the labels, making it impossible to assess real model accuracy

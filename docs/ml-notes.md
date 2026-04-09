@@ -49,6 +49,27 @@ text → clean → normalize → vectorize (TF-IDF) → model
 
 ---
 
+## Confidence Threshold
+
+* Score ≥ 0.75 → reliable classification — LLM can attempt automatic resolution
+* Score < 0.75 → goes directly to human queue with "low confidence" flag
+
+---
+
+## Classification Strategy — Multi-Message Conversations
+
+In practice, the first customer message may not clearly describe the problem (e.g. "Hi, how are you?" → "I need help" → "it's about my charge").
+
+**MVP — Approach A:**
+Classify on the first message. If score < 0.75, wait for the next message, concatenate, and reclassify. Repeat until threshold is reached or N messages (configurable, default: 3).
+
+**Future — Approach B:**
+Train the model with accumulated conversation messages as a single context, separated by a delimiter. More accurate for vague openers. Requires real conversation history data collected during pilot client phase.
+
+> Decision: Approach A for MVP, Approach B after 3 months of real pilot client data.
+
+---
+
 ## Evaluation Metrics
 
 * Accuracy
@@ -75,6 +96,24 @@ text → clean → normalize → vectorize (TF-IDF) → model
 
 ---
 
+## Feedback Loop (Planned)
+
+Agent corrections feed automatic model retraining:
+
+```
+Agent corrects wrong classification
+→ Feedback saved (ticket_id + correct_category)
+→ Accumulates N feedbacks (e.g. 500)
+→ Retraining job runs automatically
+→ Metrics compared with previous model
+→ If better → replaces model in production
+→ If worse  → keeps previous and alerts team
+```
+
+Over time the model learns the specific vocabulary of each client, generating value-based lock-in.
+
+---
+
 ## Future Improvements
 
 * Try Naive Bayes
@@ -82,5 +121,6 @@ text → clean → normalize → vectorize (TF-IDF) → model
 * Improve preprocessing
 * Hyperparameter tuning
 * Multilingual support: separate model per language (English and Portuguese) — pipeline already accepts `language` parameter
+* Approach B: train with accumulated conversation messages for better classification on vague openers
 
 ```
