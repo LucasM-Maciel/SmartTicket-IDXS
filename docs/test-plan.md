@@ -15,7 +15,7 @@ Its goal is to help the team:
 - guide less experienced contributors when writing tests
 
 This file describes **what should be tested** and **why**.  
-The actual test implementation should be created inside the `tests/` folder.
+The document lives in `docs/test-plan.md`; test implementations belong in the `tests/` folder.
 
 ---
 

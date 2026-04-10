@@ -16,6 +16,9 @@ def train_model(dataset: str):
     ticket_labels = df["Ticket Type"]
 
     ticket_texts_processed = ticket_texts.apply(run_pipeline)
+    mask = ticket_texts_processed != ""
+    ticket_texts_processed = ticket_texts_processed[mask]
+    ticket_labels = ticket_labels[mask]
     ticket_texts_train, ticket_texts_test, ticket_labels_train, ticket_labels_test = train_test_split(
         ticket_texts_processed,
         ticket_labels,
@@ -33,6 +36,7 @@ def train_model(dataset: str):
     print(classification_report(ticket_labels_test, predictions))
     joblib.dump(model, MODEL_PATH)
     joblib.dump(vectorizer, VECTORIZER_PATH)
+
 
 if __name__ == "__main__":
     train_model(DATASET_PATH)

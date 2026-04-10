@@ -1,7 +1,7 @@
 # Project Context
 ## SmartTicket — Operational Intelligence Platform for Customer Support
 
-> Last updated: 07/04/2026
+> Last updated: 09/04/2026
 > Full product vision: see `docs/product-vision-pt.md` and `docs/product-vision-en.md`
 
 ---
@@ -96,7 +96,7 @@ The MVP includes:
 3. ✅ Model training + artifacts saved
 4. ✅ Predict function (category + score)
 5. ⏳ Edge case handling in predict (empty, None, short text)
-6. ⏳ Unit tests (pipeline, preprocessing, API)
+6. ⏳ Unit tests — utils + pipeline done (`test_preprocessing`, `test_normalizer`, `test_pipeline`); ML + API tests pending
 7. ⏳ Retrain script — `scripts/retrain.py`
 8. ⏳ FastAPI app + POST /predict + POST /health (Salim)
 9. ⏳ Request/response schemas + validation (Salim)

@@ -18,6 +18,11 @@ Receive unstructured text (customer messages) and:
 - SQL
 - LLM API
 
+## Testing
+
+- Test strategy and priorities: `docs/test-plan.md`
+- Implementations: `tests/`
+
 ## Architecture (High-Level)
 
 ```text

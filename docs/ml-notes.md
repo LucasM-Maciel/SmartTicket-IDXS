@@ -82,7 +82,6 @@ Train the model with accumulated conversation messages as a single context, sepa
 ## Current Status
 
 * Project structure created
-* Pipeline defined (not fully implemented yet)
 * Dataset sourced: `customer_support_tickets.csv` (8.469 rows, 5 balanced classes)
 * Input column: `Ticket Description`
 * Label column: `Ticket Type`
@@ -93,6 +92,7 @@ Train the model with accumulated conversation messages as a single context, sepa
 * `predict` implemented in `app/ml/predict.py` (returns predicted category + confidence score)
 * Non-string inputs handled in both preprocessing functions: returns empty string to keep pipeline safe
 * First training run completed — results not representative due to synthetic dataset (see Dataset note below)
+* Unit tests (pytest): `test_preprocessing.py`, `test_normalizer.py`, `test_pipeline.py` — see `docs/test-plan.md` for full strategy; `test_train.py` / `test_predict.py` pending
 
 ---
 
@@ -114,6 +114,22 @@ Over time the model learns the specific vocabulary of each client, generating va
 
 ---
 
+## Accent Handling Strategy
+
+* **English (current):** accents are preserved — rare in English, no normalization needed for MVP.
+* **Portuguese (future):** accent removal will be needed in `normalize_text` to handle typing variations (e.g. `"cancelamento"` vs `"cancelaménto"`). This belongs in the normalization layer, not in `clean_text`, since it is a language-specific decision.
+
+---
+
+## Known Preprocessing Limitations
+
+* **Typos with punctuation between words** — e.g. `"oi,bomdia"` → `clean_text` removes the comma and produces `"oibomdia"` (unknown token). TF-IDF will assign zero weight to it, losing the tokens silently. No crash, but signal is lost.
+  * Root cause: symbols are removed without inserting a space, which is the correct behavior for cases like `"H.ELL.O"` → `"HELLO"`.
+  * Trade-off: fragmenting words (old behavior) was worse than merging them (current behavior).
+  * Future fix: use a smarter tokenizer (e.g. `nltk.word_tokenize`) that handles punctuation context-aware.
+
+---
+
 ## Future Improvements
 
 * Try Naive Bayes
@@ -122,5 +138,6 @@ Over time the model learns the specific vocabulary of each client, generating va
 * Hyperparameter tuning
 * Multilingual support: separate model per language (English and Portuguese) — pipeline already accepts `language` parameter
 * Approach B: train with accumulated conversation messages for better classification on vague openers
+* Replace simple regex tokenization with context-aware tokenizer to handle punctuation between words
 
 ```

@@ -90,3 +90,27 @@
 ### Next Steps
 - Find a better (real) dataset to replace `customer_support_tickets.csv`
 - Find a Portuguese dataset and train a separate Portuguese model to enable multilingual support
+
+---
+
+## 2026-04-09 (Lucas)
+
+### What was done
+- Created `tests/test_preprocessing.py`: pytest coverage for `clean_text` (lowercase, punctuation removal, whitespace normalization, empty input, accented characters preserved, non-string input)
+- Created `tests/test_normalizer.py`: pytest coverage for `normalize_text` (stopword removal, empty input, non-string input)
+- Created `tests/test_pipeline.py`: pytest coverage for `run_pipeline` (returns string, empty input, end-to-end clean + normalize, non-string input)
+- Moved `test-plan.md` from `tests/` to `docs/test-plan.md` (aligned with README documentation index)
+- Left `conftest.py` empty for now; `test_train.py` and `test_predict.py` reserved for next session
+
+### Problems
+- Some edge cases deliberately out of scope for MVP — not worth testing or handling yet
+
+### Solutions
+- Deferred those cases; focused tests on core behavior the pipeline must guarantee today
+
+### Learnings
+- Learned how to write and run pytest tests for the project
+
+### Next Steps
+- Finish remaining tests (`test_train.py`, `test_predict.py`, API layer when ready)
+- Create retraining scripts (`scripts/retrain.py` per project context)

@@ -269,6 +269,7 @@ The system evolves through a continuous learning cycle:
 - 🧠 TF-IDF + Logistic Regression model (training + inference implemented)
 - 📦 Model and vectorizer persistence via `joblib`
 - 🌐 Multilingual pipeline support (`language` parameter, English default)
+- 🧪 Pytest coverage for preprocessing, normalizer, and pipeline (`tests/` — strategy in `docs/test-plan.md`)
 
 ---
 
@@ -277,6 +278,7 @@ The system evolves through a continuous learning cycle:
 - API layer (FastAPI — `POST /predict` endpoint)
 - Real-world dataset sourcing (current dataset is synthetic)
 - Model evaluation with reliable data
+- Remaining tests: `train`, `predict`, API layer
 
 ---
 
