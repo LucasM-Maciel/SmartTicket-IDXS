@@ -79,6 +79,14 @@ Train the model with accumulated conversation messages as a single context, sepa
 
 ---
 
+## sklearn warnings during training smoke tests
+
+`tests/test_train.py` (e.g. `test_train_model_valid_artifacts`) runs `train_model`, which prints scikit-learn’s `classification_report` using the small fixture at `tests/fixtures/minimal_train.csv`. With very few rows in the test split, some labels may have **no predicted samples**; sklearn then emits `UndefinedMetricWarning` (precision is ill-defined for that label). **Pytest can still report *passed* with warnings.** That is a **known side effect** of this tiny fixture plus `classification_report`—it does **not** mean the test failed, and it is **not** something you should treat as “normal” when training on the full production dataset (where metrics should be well-defined if the split and labels are sound).
+
+To quiet the console: pass `zero_division` to `classification_report` in `app/ml/train.py`, or add a `filterwarnings` rule in pytest configuration.
+
+---
+
 ## Current Status
 
 * Project structure created
@@ -92,7 +100,7 @@ Train the model with accumulated conversation messages as a single context, sepa
 * `predict` implemented in `app/ml/predict.py` (returns predicted category + confidence score)
 * Non-string inputs handled in both preprocessing functions: returns empty string to keep pipeline safe
 * First training run completed — results not representative due to synthetic dataset (see Dataset note below)
-* Unit tests (pytest): `test_preprocessing.py`, `test_normalizer.py`, `test_pipeline.py` — see `docs/test-plan.md` for full strategy; `test_train.py` / `test_predict.py` pending
+* Unit tests (pytest): `test_preprocessing.py`, `test_normalizer.py`, `test_pipeline.py`, `test_train.py` (smoke) — see `docs/test-plan.md` for full strategy; `test_predict.py` pending
 
 ---
 
