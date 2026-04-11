@@ -106,12 +106,12 @@ The MVP includes:
 10. ⏳ End-to-end validation (input → predict → persist → response)
 
 ### Post-MVP
-12. ⏳ WhatsApp integration
-13. ⏳ Agent interface (Streamlit for demo, React for production)
-14. ⏳ LLM integration
-15. ⏳ Priority aging + queue
-16. ⏳ Feedback loop + automatic retraining
-17. ⏳ Monthly analytics report
+11. ⏳ WhatsApp integration
+12. ⏳ Agent interface (Streamlit for demo, React for production)
+13. ⏳ LLM integration
+14. ⏳ Priority aging + queue
+15. ⏳ Feedback loop + automatic retraining
+16. ⏳ Monthly analytics report
 
 ---
 
