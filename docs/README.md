@@ -22,6 +22,7 @@ Receive unstructured text (customer messages) and:
 
 - Test strategy and priorities: `docs/test-plan.md`
 - Implementations: `tests/`
+- Conventions and tips: `tests/best_practices.md`
 
 ## Architecture (High-Level)
 

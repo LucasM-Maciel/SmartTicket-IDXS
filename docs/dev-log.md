@@ -114,3 +114,36 @@
 ### Next Steps
 - Finish remaining tests (`test_train.py`, `test_predict.py`, API layer when ready)
 - Create retraining scripts (`scripts/retrain.py` per project context)
+
+---
+
+## 2026-04-10 (Lucas)
+
+### What was done
+- Extended `app/ml/train.py`: `train_model` now accepts explicit CSV column names (`texts`, `labels`), optional `model_path` / `vectorizer_path` for tests and alternate outputs; drops rows whose text becomes empty after `run_pipeline` before train/test split
+- Added `app/core/config.py` constants `TEXT_COLUMN` and `LABEL_COLUMN` for the production dataset column names
+- Added `app/ml/predict_category.py`: `predict_category` runs `run_pipeline` then inference; returns `{"category": "unknown", "score": 0.0}` when preprocessed text is blank (no artifact load); lazy-loads model and vectorizer with thread-safe caching; raises `FileNotFoundError` with clear paths if artifacts are missing
+- Added `tests/fixtures/minimal_train.csv` and `tests/fixtures/empty_after_pipeline.csv` for deterministic training tests
+- Expanded root `conftest.py`: fixtures `train_artifact_paths`, `minimal_train_csv`, `empty_after_pipeline_csv`, `patch_predict_category_artifacts` (monkeypatch paths + clear predict cache)
+- Implemented `tests/test_train.py`: valid artifacts written, invalid column names raise `KeyError`, empty-after-pipeline rows raise `ValueError`
+- Implemented `tests/test_predict.py`: empty string → `unknown` / `0.0`, trained model returns valid shape and score range, missing artifact files raise `FileNotFoundError`
+- Added `tests/best_practices.md` — short guide on when and how to write tests in this repo
+- `tests/test_api.py` remains a stub for FastAPI tests (next)
+
+### Problems
+- Tiny training fixture triggers sklearn `UndefinedMetricWarning` in `classification_report` when a label has no predicted samples in the test split — noisy but tests still pass
+- Some Python syntax patterns were unfamiliar while implementing train/predict tests
+- Pytest mechanics (`monkeypatch`, fixtures) not yet fully comfortable — need a focused review tomorrow to understand the test code end-to-end
+
+### Solutions
+- Documented in `docs/ml-notes.md` (sklearn warnings section); optional future fix: `zero_division` in `classification_report` or pytest `filterwarnings`
+- Planned self-study on fixtures and `monkeypatch` before extending tests further
+
+### Learnings
+- Fixtures and `monkeypatch` keep ML tests isolated from real `artifacts/` paths (conceptually clear even if implementation details still being absorbed)
+- Lazy loading + lock avoids reloading model on every prediction in production-style usage
+
+### Next Steps
+- **Pipeline + prediction-model MVP (Lucas):** only `scripts/retrain.py` remains — then this slice is complete
+- Tomorrow: reinforce pytest (fixtures, `monkeypatch`) to understand existing tests with confidence
+- `tests/test_api.py` once FastAPI routes exist (outside pipeline+ML slice; Salim / integration)

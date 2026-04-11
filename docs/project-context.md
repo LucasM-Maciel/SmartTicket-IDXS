@@ -1,7 +1,7 @@
 # Project Context
 ## SmartTicket — Operational Intelligence Platform for Customer Support
 
-> Last updated: 09/04/2026
+> Last updated: 10/04/2026
 > Full product vision: see `docs/product-vision-pt.md` and `docs/product-vision-en.md`
 
 ---
@@ -91,13 +91,16 @@ The MVP includes:
 ## Development Order
 
 ### MVP (target: end of April 2026)
+
+**Pipeline + prediction model (Lucas):** preprocessing, training, `predict_category`, and ML unit tests are in place. **Only remaining for this slice:** `scripts/retrain.py`. API tests (`test_api.py`) belong with the FastAPI work below.
+
 1. ✅ Data pipeline (cleaning + normalization)
 2. ✅ ML classification (TF-IDF + Logistic Regression)
 3. ✅ Model training + artifacts saved
-4. ✅ Predict function (category + score)
-5. ⏳ Edge case handling in predict (empty, None, short text)
-6. ⏳ Unit tests — utils + pipeline done (`test_preprocessing`, `test_normalizer`, `test_pipeline`); ML + API tests pending
-7. ⏳ Retrain script — `scripts/retrain.py`
+4. ✅ `predict_category` in `app/ml/predict_category.py` (category + score)
+5. ✅ Edge case handling in predict — empty / blank preprocessed text → `unknown` / `0.0` (`predict_category`); short text still goes through model
+6. ✅ Unit tests — utils, pipeline, `train`, `predict_category` (API tests pending with FastAPI)
+7. ⏳ Retrain script — `scripts/retrain.py` *(last item for pipeline + model MVP)*
 8. ⏳ FastAPI app + POST /predict + POST /health (Salim)
 9. ⏳ Request/response schemas + validation (Salim)
 10. ⏳ Database persistence — CONTACTS, TICKETS, MESSAGES (Salim)

@@ -29,3 +29,16 @@ def minimal_train_csv():
 def empty_after_pipeline_csv():
     """CSV whose text column becomes empty for every row after run_pipeline (stopwords only)."""
     return _TESTS_DIR / "fixtures" / "empty_after_pipeline.csv"
+
+
+@pytest.fixture
+def patch_predict_category_artifacts(monkeypatch):
+    """Bind ``predict_category`` artifact paths and clear its in-memory cache."""
+
+    def _patch(model_path: Path, vectorizer_path: Path) -> None:
+        monkeypatch.setattr("app.ml.predict_category.MODEL_PATH", model_path)
+        monkeypatch.setattr("app.ml.predict_category.VECTORIZER_PATH", vectorizer_path)
+        monkeypatch.setattr("app.ml.predict_category._model", None)
+        monkeypatch.setattr("app.ml.predict_category._vectorizer", None)
+
+    return _patch
