@@ -1,7 +1,7 @@
 # Visão de Produto — SmartTicket
 ## Plataforma de Inteligência Operacional para Atendimento ao Cliente
 
-> Documento criado em: 07/04/2026  
+> Documento criado em: 2026-04-07  
 > Autor: Lucas Marques Maciel  
 > Propósito: definir a visão completa do produto para alinhamento do time e referência para desenvolvimento
 

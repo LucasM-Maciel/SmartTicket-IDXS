@@ -271,7 +271,7 @@ The system evolves through a continuous learning cycle:
 - 🌐 Multilingual pipeline support (`language` parameter, English default)
 - 🧪 Pytest coverage for preprocessing, normalizer, pipeline, training, and `predict_category` (`tests/` — strategy in `docs/test-plan.md`, tips in `tests/best_practices.md`)
 - Test runners `scripts/retest.ps1` / `scripts/retest.bat` — invoke pytest from repo root (see `scripts/retest.md`)
-- **MVP slice (11/04/2026):** pure pipeline + training + `predict_category` is complete. **Out of scope for this slice:** persisting tickets or predictions to a database after inference (API + persistence track).
+- **MVP slice (2026-04-11):** pure pipeline + training + `predict_category` is complete. **Out of scope for this slice:** persisting tickets or predictions to a database after inference (API + persistence track).
 
 ---
 
@@ -318,8 +318,8 @@ Planned metrics:
 ### 1. Clone
 
 ```bash
-git clone https://github.com/your-username/intelligent-triage-system.git
-cd intelligent-triage-system
+git clone https://github.com/LucasM-Maciel/SmartTicket-IDXS.git
+cd SmartTicket-IDXS
 ```
 
 ---

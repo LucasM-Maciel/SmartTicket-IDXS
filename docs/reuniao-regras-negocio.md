@@ -1,8 +1,8 @@
 # Reunião — Regras de Negócio
 ## SmartTicket-IDXS
 
-> Criado em: 07/04/2026  
-> Última atualização: 07/04/2026  
+> Criado em: 2026-04-07  
+> Última atualização: 2026-04-07  
 > Legenda: ✅ Decidido · [ ] Pendente de alinhamento com o time
 
 ---

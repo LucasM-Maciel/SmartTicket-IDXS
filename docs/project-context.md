@@ -1,7 +1,7 @@
 # Project Context
 ## SmartTicket — Operational Intelligence Platform for Customer Support
 
-> Last updated: 11/04/2026
+> Last updated: 2026-04-11
 > Full product vision: see `docs/product-vision-pt.md` and `docs/product-vision-en.md`
 
 ---
@@ -37,16 +37,27 @@ WhatsApp → Preprocessing Pipeline → ML Classification → LLM auto-resolve
 
 ---
 
-## MVP Definition
+## MVP definition
 
-The MVP includes:
-- Preprocessing pipeline working independently
-- ML model classifying tickets (category + confidence score)
+### Full product MVP (target: end of April 2026)
+
+What the shipped product must include for the first release:
+- ML-backed classification (category + confidence) exposed through the API
 - API calling the pipeline (`POST /predict`)
 - `POST /health` endpoint with model load status
 - Database persistence (tickets, contacts, messages)
-- Edge case handling in predict (empty text, None, very short input)
+- Preprocessing pipeline integrated with the HTTP layer
+- Edge case handling in predict (empty text, None, very short input), enforced end-to-end once routes exist
 - Model training via `python -m app.ml.train` (writes artifacts under `artifacts/`)
+- Automated tests including API coverage when FastAPI routes are implemented
+
+### Completed technical slice (2026-04-11)
+
+Delivered by the pipeline/ML track **before** API + DB integration. In scope: **text → preprocess → offline train → offline infer → unit tests**. Not in scope: persisting tickets or predictions after classification, or any HTTP surface.
+
+- Preprocessing pipeline working independently (`clean_text` → `normalize_text` → `run_pipeline`)
+- ML model classifying tickets offline (`train_model`, `predict_category`, `joblib` artifacts)
+- Edge case handling in `predict_category` (empty / blank preprocessed text → `unknown` / `0.0`)
 - Unit tests: pipeline, preprocessing, ML train/predict (`tests/test_api.py` placeholder until FastAPI exists)
 - Convenience test runners: `scripts/retest.ps1` / `scripts/retest.bat` (see `scripts/retest.md`)
 
@@ -93,7 +104,7 @@ The MVP includes:
 
 ### MVP (target: end of April 2026)
 
-**Pipeline + prediction model (Lucas) — complete as of 11/04/2026:** preprocessing, training (`train_model`), inference (`predict_category`), ML unit tests, and repo-root pytest wrappers (`scripts/retest.*`). This milestone is **only** the text → model path; it does **not** include saving tickets or predictions to a database after classification (that requires the FastAPI + persistence track).
+**Pipeline + prediction model (Lucas) — complete as of 2026-04-11:** preprocessing, training (`train_model`), inference (`predict_category`), ML unit tests, and repo-root pytest wrappers (`scripts/retest.*`). This milestone is **only** the text → model path; it does **not** include saving tickets or predictions to a database after classification (that requires the FastAPI + persistence track).
 
 **`tests/test_api.py`** remains a placeholder until the FastAPI app exists; API tests ship with that work.
 

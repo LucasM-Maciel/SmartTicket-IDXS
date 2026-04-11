@@ -1,7 +1,7 @@
 # Product Vision — SmartTicket
 ## Operational Intelligence Platform for Customer Support
 
-> Document created: 07/04/2026  
+> Document created: 2026-04-07  
 > Author: Lucas Marques Maciel  
 > Purpose: define the complete product vision for team alignment and development reference
 
