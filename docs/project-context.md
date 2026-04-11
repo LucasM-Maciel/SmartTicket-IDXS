@@ -1,7 +1,7 @@
 # Project Context
 ## SmartTicket — Operational Intelligence Platform for Customer Support
 
-> Last updated: 10/04/2026
+> Last updated: 11/04/2026
 > Full product vision: see `docs/product-vision-pt.md` and `docs/product-vision-en.md`
 
 ---
@@ -48,6 +48,7 @@ The MVP includes:
 - Edge case handling in predict (empty text, None, very short input)
 - Model training via `python -m app.ml.train` (writes artifacts under `artifacts/`)
 - Unit tests: pipeline, preprocessing, ML train/predict (`tests/test_api.py` placeholder until FastAPI exists)
+- Convenience test runners: `scripts/retest.ps1` / `scripts/retest.bat` (see `scripts/retest.md`)
 
 ---
 
@@ -92,7 +93,9 @@ The MVP includes:
 
 ### MVP (target: end of April 2026)
 
-**Pipeline + prediction model (Lucas):** preprocessing, training, `predict_category`, and ML unit tests are in place for this slice. **`tests/test_api.py`** is intentionally empty until the FastAPI app lands; API tests will be added with that work.
+**Pipeline + prediction model (Lucas) — complete as of 11/04/2026:** preprocessing, training (`train_model`), inference (`predict_category`), ML unit tests, and repo-root pytest wrappers (`scripts/retest.*`). This milestone is **only** the text → model path; it does **not** include saving tickets or predictions to a database after classification (that requires the FastAPI + persistence track).
+
+**`tests/test_api.py`** remains a placeholder until the FastAPI app exists; API tests ship with that work.
 
 1. ✅ Data pipeline (cleaning + normalization)
 2. ✅ ML classification (TF-IDF + Logistic Regression)

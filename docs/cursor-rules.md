@@ -39,3 +39,5 @@ Always prioritize:
 - project-context.md
 - architecture.md
 - api-contracts.md
+- scripts/best_practices.md (when adding or changing `scripts/`)
+- scripts/retest.md (when changing test runner wrappers)

@@ -144,6 +144,28 @@
 - Lazy loading + lock avoids reloading model on every prediction in production-style usage
 
 ### Next Steps
-- **Pipeline + prediction-model MVP (Lucas):** only `scripts/retrain.py` remains — then this slice is complete
-- Tomorrow: reinforce pytest (fixtures, `monkeypatch`) to understand existing tests with confidence
-- `tests/test_api.py` once FastAPI routes exist (outside pipeline+ML slice; Salim / integration)
+- *(Superseded 2026-04-11 — see entry below.)* Pipeline + prediction-model slice closed without DB persistence; optional operational `scripts/retrain.py` remains a future enhancement tied to the feedback loop.
+
+---
+
+## 2026-04-11 (Lucas)
+
+### What was done
+- **Closed MVP slice — pure pipeline + prediction model (Lucas):** preprocessing → `train_model` → `predict_category` → unit tests; **explicitly out of scope for this milestone:** persisting the ticket or prediction to the database after inference (that work stays with API + DB integration).
+- Added `scripts/retest.bat` and `scripts/retest.ps1`: run `python -m pytest` from the repository root so root `conftest.py` and `tests/` resolve correctly; extra pytest args are forwarded.
+- Added `scripts/retest.md`: usage, prerequisites, PowerShell execution policy, troubleshooting (`ModuleNotFoundError: app`, etc.).
+- Added `scripts/best_practices.md`: conventions for scripts as thin wrappers over `app/` logic; links to retest docs.
+- **PR:** documentation pass so reviewers see a consistent story for the ML/pipeline deliverable.
+
+### Problems
+- None blocking release of this slice.
+
+### Solutions
+- N/A
+
+### Learnings
+- Wrapper scripts reduce friction for contributors running tests from the wrong working directory.
+
+### Next Steps
+- Open PR and hand off to API/DB track (`FastAPI`, persistence, `test_api.py`).
+- Later: operational retraining entry point (`scripts/retrain.py` or equivalent) when the feedback-loop milestone is scheduled.

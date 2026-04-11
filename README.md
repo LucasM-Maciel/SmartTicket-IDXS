@@ -270,12 +270,13 @@ The system evolves through a continuous learning cycle:
 - 📦 Model and vectorizer persistence via `joblib`
 - 🌐 Multilingual pipeline support (`language` parameter, English default)
 - 🧪 Pytest coverage for preprocessing, normalizer, pipeline, training, and `predict_category` (`tests/` — strategy in `docs/test-plan.md`, tips in `tests/best_practices.md`)
+- Test runners `scripts/retest.ps1` / `scripts/retest.bat` — invoke pytest from repo root (see `scripts/retest.md`)
+- **MVP slice (11/04/2026):** pure pipeline + training + `predict_category` is complete. **Out of scope for this slice:** persisting tickets or predictions to a database after inference (API + persistence track).
 
 ---
 
 ### 🚧 In Progress
 
-- Retrain script (`scripts/retrain.py`) — last piece for pipeline + prediction-model MVP
 - API layer (FastAPI — `POST /predict` endpoint)
 - Real-world dataset sourcing (current dataset is synthetic)
 - Model evaluation with reliable data
@@ -285,12 +286,13 @@ The system evolves through a continuous learning cycle:
 
 ### 🔮 Planned
 
+- Operational retrain entry point (e.g. `scripts/retrain.py`) when the feedback-loop / scheduling milestone lands
 - 🤖 LLM automatic resolution (with structured ML context)
 - ⚠️ Dynamic priority + priority aging queue
 - 🗃️ Database integration (PostgreSQL)
 - 📱 WhatsApp Business API integration (Z-API / Twilio)
 - 🖥️ Agent interface (Streamlit demo → React production)
-- 🔁 Feedback loop + automatic model retraining
+- 🔁 Feedback loop + automatic model retraining (may include scheduled retrain jobs)
 - 📈 Monthly analytics report
 - ☁️ Cloud deployment
 
@@ -348,7 +350,39 @@ pip install -r requirements.txt
 
 ---
 
-### 4. Run API
+### 4. Train the model (writes `artifacts/`)
+
+From the **repository root** (with your venv activated):
+
+```bash
+python -m app.ml.train
+```
+
+---
+
+### 5. Run tests
+
+From the **repository root**:
+
+```bash
+python -m pytest
+```
+
+On Windows you can use the wrappers (same effect, forwards extra args to pytest):
+
+```powershell
+.\scripts\retest.ps1
+```
+
+```bat
+scripts\retest.bat
+```
+
+See `scripts/retest.md` for details.
+
+---
+
+### 6. Run API *(when implemented)*
 
 ```bash
 uvicorn app.main:app --reload
@@ -361,7 +395,7 @@ uvicorn app.main:app --reload
 ### 🔹 MVP
 
 - [x] Preprocessing pipeline
-- [x] ML classification model
+- [x] ML classification model (train + `predict_category`; no DB write after prediction yet)
 - [ ] API endpoint
 
 ---
@@ -390,7 +424,13 @@ uvicorn app.main:app --reload
 - API Contracts → `docs/api-contracts.md`
 - ML Notes → `docs/ml-notes.md`
 - Test Plan → `docs/test-plan.md`
+- Running tests (repo root) → `scripts/retest.md`
+- Scripts conventions → `scripts/best_practices.md`
+- Project context → `docs/project-context.md`
+- Development log → `docs/dev-log.md`
+- Product vision (EN / PT) → `docs/product-vision-en.md`, `docs/product-vision-pt.md`
 - Team Responsibilities → `docs/team-responsibilities.md`
+- License → `LICENSE`
 
 ---
 

@@ -56,6 +56,7 @@ Dataset
 * `app/utils` → reusable functions
 * `app/data` → datasets
 * `app/core` → configs
+* `scripts/` → thin CLI wrappers (e.g. pytest from repo root); must call logic in `app/`, not duplicate it
 
 ---
 
