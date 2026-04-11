@@ -75,4 +75,10 @@ if __name__ == "__main__":
 * Use them as wrappers for real logic
 * Clearly name scripts based on their purpose
 
+---
+
+## Running tests (retest)
+
+Wrapper scripts `retest.bat` and `retest.ps1` run `python -m pytest` from the repository root and forward extra arguments to pytest. Full usage: [retest.md](./retest.md).
+
 ```

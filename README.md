@@ -43,23 +43,27 @@ While also enabling:
 ### 🔵 Online Flow (Real-Time Inference)
 
 ```text
-Client
+Customer sends message on WhatsApp
 ↓
-API (FastAPI)
+WhatsApp Business API → webhook
 ↓
-Text Preprocessing Pipeline
+FastAPI: validate + save contact/ticket
 ↓
-Feature Extraction (TF-IDF)
+Text Preprocessing Pipeline (clean → normalize → vectorize)
 ↓
-ML Model (Logistic Regression)
+ML Model (TF-IDF + Logistic Regression)
 ↓
-Classification (Category + Score)
+Category + Confidence Score
 ↓
-(Optional) LLM Response
+Score ≥ 0.75?
+├─ Yes → LLM attempts resolution → resolved or escalated
+└─ No  → Human queue (low confidence)
 ↓
-(Optional) Database Persistence
+Agent responds via SmartTicket interface
 ↓
-API Response
+System delivers response via WhatsApp API
+↓
+Everything stored → analytics + model retraining
 ```
 
 ---
@@ -221,10 +225,14 @@ The system evolves through a continuous learning cycle:
 |---|---|
 | Language | Python |
 | Data Processing | Pandas |
-| ML | Scikit-learn |
+| ML | Scikit-learn (TF-IDF + Logistic Regression) |
 | API | FastAPI |
-| Database | PostgreSQL / SQLite *(planned)* |
+| Database | PostgreSQL — Supabase (MVP), Railway/RDS (production) |
 | LLM | OpenAI API *(planned)* |
+| WhatsApp | Z-API / Twilio *(planned)* |
+| Real-time | WebSockets via FastAPI — polling for demo |
+| Agent Interface | Streamlit (demo) → React / Next.js (production) |
+| Scheduled Jobs | APScheduler *(planned)* |
 | Version Control | Git & GitHub |
 
 ---
@@ -257,34 +265,42 @@ The system evolves through a continuous learning cycle:
 
 ### ✅ Current
 
-- 🧠 ML-based text classification
-- ⚡ FastAPI inference endpoint
-- 🔄 Text preprocessing pipeline
+- 🔄 Text preprocessing pipeline (`clean_text` → `normalize_text` → `run_pipeline`)
+- 🧠 TF-IDF + Logistic Regression model (training + inference implemented)
+- 📦 Model and vectorizer persistence via `joblib`
+- 🌐 Multilingual pipeline support (`language` parameter, English default)
+- 🧪 Pytest coverage for preprocessing, normalizer, pipeline, training, and `predict_category` (`tests/` — strategy in `docs/test-plan.md`, tips in `tests/best_practices.md`)
+- Test runners `scripts/retest.ps1` / `scripts/retest.bat` — invoke pytest from repo root (see `scripts/retest.md`)
+- **MVP slice (2026-04-11):** pure pipeline + training + `predict_category` is complete. **Out of scope for this slice:** persisting tickets or predictions to a database after inference (API + persistence track).
 
 ---
 
 ### 🚧 In Progress
 
-- API structuring (versioning, routes)
-- Improved preprocessing
-- Model tuning
+- API layer (FastAPI — `POST /predict` endpoint)
+- Real-world dataset sourcing (current dataset is synthetic)
+- Model evaluation with reliable data
+- API tests (`test_api.py` stub) when routes exist
 
 ---
 
 ### 🔮 Planned
 
-- 🤖 LLM response generation
-- ⚠️ Priority classification
-- 🗃️ Database integration
-- 📈 Logging & monitoring
+- Operational retrain entry point (e.g. `scripts/retrain.py`) when the feedback-loop / scheduling milestone lands
+- 🤖 LLM automatic resolution (with structured ML context)
+- ⚠️ Dynamic priority + priority aging queue
+- 🗃️ Database integration (PostgreSQL)
+- 📱 WhatsApp Business API integration (Z-API / Twilio)
+- 🖥️ Agent interface (Streamlit demo → React production)
+- 🔁 Feedback loop + automatic model retraining (may include scheduled retrain jobs)
+- 📈 Monthly analytics report
 - ☁️ Cloud deployment
-- 📱 WhatsApp integration (webhooks & messaging APIs)
 
 ---
 
 ## 📈 Model Evaluation
 
-> Metrics will be added after validation pipeline is finalized.
+> First training run completed. Metrics are not yet reliable — current dataset is synthetic and ticket descriptions have no clear semantic relationship with the labels.
 
 Planned metrics:
 
@@ -293,6 +309,8 @@ Planned metrics:
 - Confusion matrix
 - Business-oriented metrics (resolution success, response time)
 
+> ⚠️ Evaluation will be meaningful only after replacing the dataset with real-world data.
+
 ---
 
 ## 🛠️ Setup
@@ -300,8 +318,8 @@ Planned metrics:
 ### 1. Clone
 
 ```bash
-git clone https://github.com/your-username/intelligent-triage-system.git
-cd intelligent-triage-system
+git clone https://github.com/LucasM-Maciel/SmartTicket-IDXS.git
+cd SmartTicket-IDXS
 ```
 
 ---
@@ -332,7 +350,39 @@ pip install -r requirements.txt
 
 ---
 
-### 4. Run API
+### 4. Train the model (writes `artifacts/`)
+
+From the **repository root** (with your venv activated):
+
+```bash
+python -m app.ml.train
+```
+
+---
+
+### 5. Run tests
+
+From the **repository root**:
+
+```bash
+python -m pytest
+```
+
+On Windows you can use the wrappers (same effect, forwards extra args to pytest):
+
+```powershell
+.\scripts\retest.ps1
+```
+
+```bat
+scripts\retest.bat
+```
+
+See `scripts/retest.md` for details.
+
+---
+
+### 6. Run API *(when implemented)*
 
 ```bash
 uvicorn app.main:app --reload
@@ -344,8 +394,8 @@ uvicorn app.main:app --reload
 
 ### 🔹 MVP
 
-- [ ] Preprocessing pipeline
-- [ ] ML classification model
+- [x] Preprocessing pipeline
+- [x] ML classification model (train + `predict_category`; no DB write after prediction yet)
 - [ ] API endpoint
 
 ---
@@ -374,7 +424,13 @@ uvicorn app.main:app --reload
 - API Contracts → `docs/api-contracts.md`
 - ML Notes → `docs/ml-notes.md`
 - Test Plan → `docs/test-plan.md`
+- Running tests (repo root) → `scripts/retest.md`
+- Scripts conventions → `scripts/best_practices.md`
+- Project context → `docs/project-context.md`
+- Development log → `docs/dev-log.md`
+- Product vision (EN / PT) → `docs/product-vision-en.md`, `docs/product-vision-pt.md`
 - Team Responsibilities → `docs/team-responsibilities.md`
+- License → `LICENSE`
 
 ---
 

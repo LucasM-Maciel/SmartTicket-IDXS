@@ -1,4 +1,11 @@
-# app/core/config.py
-MODEL_PATH = "artifacts/model.pkl"
-VECTORIZER_PATH = "artifacts/vectorizer.pkl"
-DATASET_PATH = "app/data/raw/customer_support_tickets.csv"
+from pathlib import Path
+
+
+_REPO_ROOT = Path(__file__).resolve().parent.parent.parent
+
+MODEL_PATH = _REPO_ROOT / "artifacts" / "model.pkl"
+VECTORIZER_PATH = _REPO_ROOT / "artifacts" / "vectorizer.pkl"
+DATASET_PATH = _REPO_ROOT / "app" / "data" / "raw" / "customer_support_tickets.csv"
+
+TEXT_COLUMN = "Ticket Description"
+LABEL_COLUMN = "Ticket Type"

@@ -29,6 +29,7 @@
 
 * `text` must be a string
 * Response includes classification and confidence score
+* ML layer (`predict_category`): if preprocessing yields only whitespace, the API may return `category: "unknown"` and `score: 0.0` without loading model artifacts (align response schema with the FastAPI implementation when built)
 * LLM response may be added later
 
 ```

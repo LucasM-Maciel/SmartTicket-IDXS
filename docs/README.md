@@ -18,6 +18,14 @@ Receive unstructured text (customer messages) and:
 - SQL
 - LLM API
 
+## Testing
+
+- Test strategy and priorities: `docs/test-plan.md`
+- Implementations: `tests/`
+- Conventions and tips: `tests/best_practices.md`
+- Run pytest from repo root: `scripts/retest.ps1` or `scripts/retest.bat` — see `scripts/retest.md`
+- Script folder conventions: `scripts/best_practices.md`
+
 ## Architecture (High-Level)
 
 ```text
