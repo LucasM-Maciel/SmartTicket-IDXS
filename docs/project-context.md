@@ -46,8 +46,8 @@ The MVP includes:
 - `POST /health` endpoint with model load status
 - Database persistence (tickets, contacts, messages)
 - Edge case handling in predict (empty text, None, very short input)
-- Retrain script in `scripts/retrain.py`
-- Unit tests: pipeline, preprocessing, API
+- Model training via `python -m app.ml.train` (writes artifacts under `artifacts/`)
+- Unit tests: pipeline, preprocessing, ML train/predict (`tests/test_api.py` placeholder until FastAPI exists)
 
 ---
 
@@ -92,19 +92,18 @@ The MVP includes:
 
 ### MVP (target: end of April 2026)
 
-**Pipeline + prediction model (Lucas):** preprocessing, training, `predict_category`, and ML unit tests are in place. **Only remaining for this slice:** `scripts/retrain.py`. API tests (`test_api.py`) belong with the FastAPI work below.
+**Pipeline + prediction model (Lucas):** preprocessing, training, `predict_category`, and ML unit tests are in place for this slice. **`tests/test_api.py`** is intentionally empty until the FastAPI app lands; API tests will be added with that work.
 
 1. ✅ Data pipeline (cleaning + normalization)
 2. ✅ ML classification (TF-IDF + Logistic Regression)
-3. ✅ Model training + artifacts saved
+3. ✅ Model training + artifacts saved (`python -m app.ml.train`)
 4. ✅ `predict_category` in `app/ml/predict_category.py` (category + score)
 5. ✅ Edge case handling in predict — empty / blank preprocessed text → `unknown` / `0.0` (`predict_category`); short text still goes through model
 6. ✅ Unit tests — utils, pipeline, `train`, `predict_category` (API tests pending with FastAPI)
-7. ⏳ Retrain script — `scripts/retrain.py` *(last item for pipeline + model MVP)*
-8. ⏳ FastAPI app + POST /predict + POST /health (Salim)
-9. ⏳ Request/response schemas + validation (Salim)
-10. ⏳ Database persistence — CONTACTS, TICKETS, MESSAGES (Salim)
-11. ⏳ End-to-end validation (input → predict → persist → response)
+7. ⏳ FastAPI app + POST /predict + POST /health (Salim)
+8. ⏳ Request/response schemas + validation (Salim)
+9. ⏳ Database persistence — CONTACTS, TICKETS, MESSAGES (Salim)
+10. ⏳ End-to-end validation (input → predict → persist → response)
 
 ### Post-MVP
 12. ⏳ WhatsApp integration
