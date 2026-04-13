@@ -1,396 +1,284 @@
-# 🗺️ Sprint Plan — Intelligent Triage System (Revised)
+# Sprint plan — SmartTicket-IDXS
 
-> Goal: Deliver a functional MVP with ML classification in ~6–8 weeks, with optional LLM and real-world integrations.
-
----
-
-# ⚪ Sprint 0 — Dataset & Problem Definition
-
-⏱️ **Duration: 3–5 days**
-
-## 🎯 Goal
-Define the classification problem and prepare initial dataset
+> **Living document:** update checkboxes as work completes.  
+> **As of 2026-04-12:** offline **pipeline + training + `predict_category` + ML unit tests** slice is done (see `docs/project-context.md`). **Next focus:** FastAPI, persistence, API tests (Salim track).
 
 ---
 
-### 👨‍💻 Lucas
+## Progress snapshot
 
-- [ ] Find or create dataset
-- [ ] Analyze data quality
-- [ ] Identify noise and inconsistencies
-- [ ] Validate dataset usability
-
----
-
-### 👨‍💻 Rafael
-
-- [ ] Define categories (business + UX perspective)
-- [ ] Create examples per category
+| Phase | Status |
+|-------|--------|
+| Sprints 0–3 (data, pipeline, training) | Largely **done** |
+| Sprint 4 (inference in API) | **Partial** — ML ready; HTTP routes still to wire |
+| Sprints 5+ (LLM, WhatsApp, hardening) | **Not started** (post-MVP / optional) |
 
 ---
 
-### 🤝 Shared
+# Sprint 0 — Dataset & problem definition
 
-- [ ] Align classification scope
-- [ ] Define initial labels
+**Duration:** 3–5 days
 
----
+## Goal
 
-# 🟢 Sprint 1 — Foundation & Setup
+Define classification problem and initial dataset.
 
-⏱️ **Duration: 3–5 days**
+### Lucas
 
-## 🎯 Goal
-Project structure, environment, and base API running
+- [x] Find or create dataset (synthetic CSV in repo; replace with real data later)
+- [x] Analyze data quality (ongoing; documented in `docs/ml-notes.md`)
+- [x] Identify noise / limitations (noted for synthetic data)
+- [x] Validate usability for baseline model
 
----
+### Rafael
 
-### 👨‍💻 Lucas
+- [x] Define categories (business + UX) — see `docs/reuniao-regras-negocio.md` / vision docs
+- [x] Create examples per category (evolving)
 
-- [ ] Create project structure (`app/`, `utils/`, `ml/`, `services/`)
-- [ ] Setup initial text cleaning functions
-- [ ] Define preprocessing steps
+### Shared
 
----
-
-### 👨‍💻 Salim
-
-- [ ] Setup FastAPI project
-- [ ] Create `main.py`
-- [ ] Create `/health` route
-- [ ] Define architecture baseline
+- [x] Align classification scope
+- [x] Define initial labels (MVP category set in docs)
 
 ---
 
-### 👨‍💻 Rafael
+# Sprint 1 — Foundation & setup
 
-- [ ] Improve README overview
-- [ ] Create `docs/system-overview.md`
+**Duration:** 3–5 days
 
----
+## Goal
 
-### 👨‍💻 Luís
+Project structure, environment, app shell.
 
-- [ ] Review structure
-- [ ] Suggest improvements
+### Lucas
 
----
+- [x] Project structure (`app/utils`, `app/ml`, `app/services`, …)
+- [x] Initial text cleaning / normalization (`clean_text`, `normalize_text`)
+- [x] Preprocessing steps defined and tested
 
-### 🤝 Shared
+### Salim
 
-- [ ] Align MVP scope
+- [x] FastAPI project layout (`app/main.py`, `app/api/`) — **skeleton in place**
+- [ ] `POST /predict` + `POST /health` **implemented** and aligned with `docs/api-contracts.md`
+- [x] Architecture baseline documented (`docs/architecture.md`, `docs/project-context.md`)
 
----
+### Rafael
 
-# 🟡 Sprint 2 — Data Pipeline & Preprocessing
+- [x] README / docs index improved over time
+- [x] System overview in `docs/` (multiple files; no single `system-overview.md`)
 
-⏱️ **Duration: 5–7 days**
+### Luís
 
-## 🎯 Goal
-Reliable and reusable text preprocessing pipeline
+- [ ] Structure review (as needed)
 
----
+### Shared
 
-### 👨‍💻 Lucas
-
-- [ ] Implement full preprocessing pipeline
-- [ ] Token normalization
-- [ ] Stopword removal
-- [ ] Build reusable utilities
+- [x] MVP scope aligned (full product MVP vs technical slice in `project-context.md`)
 
 ---
 
-### 👨‍💻 Salim
+# Sprint 2 — Data pipeline & preprocessing
 
-- [ ] Create `services/pipeline.py`
-- [ ] Integrate preprocessing into API flow
+**Duration:** 5–7 days
 
----
+## Goal
 
-### 👨‍💻 Rafael
+Reliable reusable text preprocessing.
 
-- [ ] Create test scenarios
-- [ ] Define expected outputs
+### Lucas
 
----
+- [x] Full preprocessing pipeline (`run_pipeline` in `app/services/pipeline.py`)
+- [x] Normalization + stopwords (`app/utils/`)
+- [x] Reusable utilities + pytest (`tests/test_preprocessing.py`, `test_pipeline.py`, …)
 
-### 👨‍💻 Luís
+### Salim
 
-- [ ] Review preprocessing logic
-- [ ] Optimize performance
+- [ ] Integrate preprocessing **via** `predict_category` / API only (pipeline owned by Lucas — **no duplicate** `pipeline.py` under Salim)
 
----
+### Rafael
 
-### 🤝 Shared
+- [x] Test scenarios / expected outputs (partially in tests + docs)
 
-- [ ] Validate preprocessing quality
+### Luís
 
----
+- [ ] Preprocessing review / perf (optional)
 
-# 🔵 Sprint 3 — ML Model (Training)
+### Shared
 
-⏱️ **Duration: 4–6 days**
-
-## 🎯 Goal
-Train and validate classification model
+- [x] Preprocessing quality validated in tests
 
 ---
 
-### 👨‍💻 Lucas
+# Sprint 3 — ML model (training)
 
-- [ ] TF-IDF vectorization
-- [ ] Train Logistic Regression
-- [ ] Evaluate model (accuracy, precision, recall)
-- [ ] Save model artifact (`.pkl`)
+**Duration:** 4–6 days
 
----
+## Goal
 
-### 👨‍💻 Rafael
+Train and persist classification model.
 
-- [ ] Validate categories
-- [ ] Create validation examples
+### Lucas
 
----
+- [x] TF-IDF + Logistic Regression (`app/ml/train.py`)
+- [x] Train/val split, `classification_report`, artifacts (`joblib`)
+- [x] Configurable columns/paths (`app/core/config.py`)
 
-### 👨‍💻 Luís
+### Rafael
 
-- [ ] Review model outputs
-- [ ] Suggest improvements
+- [x] Category validation examples (in docs / tests fixtures)
 
----
+### Luís
 
-### 🤝 Shared
+- [ ] Model output review (optional)
 
-- [ ] Validate model performance
+### Shared
 
----
-
-# 🔵 Sprint 4 — ML Integration (Inference)
-
-⏱️ **Duration: 4–6 days**
-
-## 🎯 Goal
-Integrate trained model into API
+- [x] Baseline performance accepted for synthetic data (real eval later)
 
 ---
 
-### 👨‍💻 Lucas
+# Sprint 4 — ML integration (inference)
 
-- [ ] Create prediction function
-- [ ] Load trained model
-- [ ] Ensure preprocessing consistency
+**Duration:** 4–6 days
 
----
+## Goal
 
-### 👨‍💻 Salim
+Expose classification through the API.
 
-- [ ] Integrate ML into `/predict`
-- [ ] Define request/response schema
+### Lucas
 
----
+- [x] Prediction API in code: `predict_category` (`app/ml/predict_category.py`)
+- [x] Lazy load + thread-safe cache, edge cases (`unknown` / missing artifacts)
+- [x] ML tests (`tests/test_predict.py`, fixtures, `conftest.py`)
 
-### 👨‍💻 Rafael
+### Salim
 
-- [ ] Create API usage examples
-- [ ] Document input/output
+- [ ] Wire `POST /predict` to `predict_category`
+- [ ] Pydantic schemas (`app/api/schemas.py`) = `docs/api-contracts.md`
+- [ ] `POST /health`
+- [ ] `tests/test_api.py`
 
----
+### Rafael
 
-### 👨‍💻 Luís
+- [ ] API usage examples in README or `docs/` once routes exist
 
-- [ ] Test integration
-- [ ] Debug inconsistencies
+### Luís
 
----
+- [ ] Integration test support (optional)
 
-### 🤝 Shared
+### Shared
 
-- [ ] End-to-end validation (input → prediction → response)
-
----
-
-# 🟣 Sprint 5 — LLM Integration (Optional)
-
-⏱️ **Duration: 5–7 days**
-
-## 🎯 Goal
-Add optional AI-generated responses
+- [ ] End-to-end: HTTP → predict → response (DB persistence = next step)
 
 ---
 
-### 👨‍💻 Lucas
+# Sprint 5 — LLM integration (optional)
 
-- [ ] Integrate LLM API
-- [ ] Pass classification output as context
-- [ ] Implement fallback if LLM fails
+**Duration:** 5–7 days
 
----
+## Goal
 
-### 👨‍💻 Salim
+Optional AI-generated responses (`app/services/llm_service.py`).
 
-- [ ] Add LLM into API flow
-- [ ] Create toggle (enable/disable LLM)
+### Lucas
 
----
+- [ ] LLM client + context from classification + fallback
 
-### 👨‍💻 Rafael
+### Salim
 
-- [ ] Design prompt templates per category
-- [ ] Define tone and response style
+- [ ] LLM in API flow + feature toggle
 
----
+### Rafael
 
-### 👨‍💻 Luís
+- [ ] Prompt templates per category
 
-- [ ] Review integration
-- [ ] Optimize latency and cost
+### Luís
 
----
+- [ ] Review latency / cost
 
-### 🤝 Shared
+### Shared
 
-- [ ] Validate responses quality
+- [ ] Validate response quality
 
 ---
 
-# 🟠 Sprint 6 — Refinement & Stability
+# Sprint 6 — Refinement & stability
 
-⏱️ **Duration: 6–8 days**
+**Duration:** 6–8 days
 
-## 🎯 Goal
-Stabilize system and improve reliability
+## Goal
 
----
+Hardening before wider release.
 
-### 👨‍💻 Lucas
+### Lucas
 
-- [ ] Improve model performance
-- [ ] Handle edge cases
+- [ ] Model / edge-case improvements
 
----
+### Salim
 
-### 👨‍💻 Salim
+- [ ] Error handling, API structure, DB integration complete
 
-- [ ] Implement error handling
-- [ ] Improve API structure
+### Rafael
 
----
+- [ ] Final user-facing docs
 
-### 👨‍💻 Rafael
+### Luís
 
-- [ ] Final documentation
-- [ ] Demo examples
+- [ ] Refactor / maintainability
 
----
+### Shared
 
-### 👨‍💻 Luís
-
-- [ ] Refactor backend
-- [ ] Improve maintainability
+- [ ] Full regression testing + MVP sign-off
 
 ---
 
-### 🤝 Shared
+# Sprint 7 — Enhancements (optional)
 
-- [ ] Final testing
-- [ ] MVP validation
+**Duration:** 5–7 days
 
-- [ ] Basic unit tests (pipeline + API)
-
----
-
-# ⚫ Sprint 7 — Enhancements (Optional)
-
-⏱️ **Duration: 5–7 days**
-
-## 🎯 Goal
-Add production-ready improvements
-
----
-
-- [ ] Logging system
-- [ ] Confidence thresholds
-- [ ] Basic database integration
+- [ ] Structured logging
+- [ ] Confidence thresholds / routing rules
 - [ ] Monitoring hooks
-- [ ] Prepare deployment
+- [ ] Deployment checklist
 
 ---
 
-# 🟤 Sprint 8 — WhatsApp Integration (Business Layer)
+# Sprint 8 — WhatsApp (business layer)
 
-⏱️ **Duration: 5–7 days**
+**Duration:** 5–7 days
 
-## 🎯 Goal
-Enable real-world usage via messaging channel
+## Goal
 
----
+Real channel: WhatsApp → API → response.
 
-### 👨‍💻 Salim
+### Salim
 
-- [ ] Create webhook endpoint
-- [ ] Handle incoming messages
+- [ ] Webhook endpoint, idempotency basics
 
----
+### Lucas
 
-### 👨‍💻 Lucas
+- [ ] Real-time message shape compatibility with pipeline
 
-- [ ] Adapt pipeline for real-time messages
-- [ ] Ensure inference works with chat input
+### Rafael
 
----
+- [ ] Chat-oriented response patterns
 
-### 👨‍💻 Rafael
+### Luís
 
-- [ ] Define response patterns for chat
-- [ ] Improve conversational UX
+- [ ] E2E debugging
 
----
+### Shared
 
-### 👨‍💻 Luís
-
-- [ ] Test integration
-- [ ] Debug flow
+- [ ] WhatsApp → API → out validation
 
 ---
 
-### 🤝 Shared
+## Timeline (indicative)
 
-- [ ] End-to-end validation (WhatsApp → API → Response)
+| Sprint | Duration | Notes |
+|--------|----------|--------|
+| 0–2 | ~2–3 weeks | Mostly **done** |
+| 3–4 | ~2 weeks | Training **done**; API wiring **in progress** |
+| 5–8 | Optional / post-MVP | LLM, polish, WhatsApp |
 
----
-
-# 🧠 Timeline Summary
-
-| Sprint              | Duration |
-|-------------------|--------|
-| Sprint 0           | 3–5 days |
-| Sprint 1           | 3–5 days |
-| Sprint 2           | 5–7 days |
-| Sprint 3           | 4–6 days |
-| Sprint 4           | 4–6 days |
-| Sprint 5           | 5–7 days |
-| Sprint 6           | 6–8 days |
-| Sprint 7 (optional)| 5–7 days |
-| Sprint 8 (optional)| 5–7 days |
-
----
-
-### ⏱️ Total Estimated Time
-
-👉 **~30 a 45 days (MVP)**  
-
----
-
-# 🧨 Reality Check
-
-- Early sprints → fast progress  
-- Mid project → integration complexity  
-- Final phase → debugging & refinement  
-
----
-
-# 🚀 Golden Rule
-
-> If something blocks you for more than 1 day → simplify and move forward
-
-**Delivery > Perfection**
+**Rule:** if blocked &gt; 1 day on non-critical path → simplify and ship the next increment.

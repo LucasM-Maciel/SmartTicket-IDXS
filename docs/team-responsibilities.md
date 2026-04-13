@@ -1,4 +1,3 @@
-```md
 # Team Responsibilities
 
 ## Lucas (Data, ML & Core Backend)
@@ -96,4 +95,3 @@ These responsibilities involve more than one team member:
 - Integration testing
 - Final delivery validation
 - Dataset understanding and refinement
-```

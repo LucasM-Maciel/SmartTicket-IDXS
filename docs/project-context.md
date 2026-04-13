@@ -1,7 +1,7 @@
 # Project Context
 ## SmartTicket — Operational Intelligence Platform for Customer Support
 
-> Last updated: 2026-04-11
+> Last updated: 2026-04-12
 > Full product vision: see `docs/product-vision-pt.md` and `docs/product-vision-en.md`
 
 ---
@@ -126,6 +126,24 @@ Delivered by the pipeline/ML track **before** API + DB integration. In scope: **
 14. ⏳ Priority aging + queue
 15. ⏳ Feedback loop + automatic retraining
 16. ⏳ Monthly analytics report
+
+---
+
+## Future technical planning
+
+Directions **after** the core product path (API, DB, feedback loop) is stable — not MVP commitments; revisit when pain appears.
+
+**MLOps & orchestration**
+- **MLflow** (or equivalent): consider when multiple experiments, model versions, and metric comparison become routine — less urgent while training stays a simple baseline and artifacts are few.
+- **Apache Airflow** (or lighter options: cron, CI schedules, cloud schedulers): consider when retraining and data pipelines need **DAGs**, retries, and operational monitoring; avoid the operational cost until scheduled jobs are a real requirement.
+
+**LLM & retrieval**
+- **RAG / embeddings / vector store**: consider when auto-responses must be **grounded in client knowledge** (policies, KB, long docs) and prompt-only LLM is insufficient; not required for MVP classification + simple LLM flows.
+
+**Analytics & visualization**
+- **BI** (e.g. Power BI, Metabase, Looker-style tools) on **SQL** over the operational DB or warehouse: primary path for business-facing dashboards and self-serve exploration.
+- **Python** (notebooks, Streamlit/Dash, or chart libs): keep for **data prep**, ad-hoc analysis, ML evaluation, and **embedded** internal tools where a full BI stack is overkill.
+- Typical pattern: **hybrid** — metrics layer in SQL/Python, consumption in BI; productized views only where needed.
 
 ---
 

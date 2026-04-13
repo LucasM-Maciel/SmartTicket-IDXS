@@ -420,6 +420,7 @@ uvicorn app.main:app --reload
 
 ## 📄 Documentation
 
+- **Index of all docs** → `docs/README.md`
 - System Architecture → `docs/architecture.md`
 - API Contracts → `docs/api-contracts.md`
 - ML Notes → `docs/ml-notes.md`

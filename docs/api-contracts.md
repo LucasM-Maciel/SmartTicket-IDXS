@@ -1,4 +1,3 @@
-````md id="apicontracts001"
 # API Contracts
 
 ## POST /predict
@@ -9,9 +8,7 @@
 {
   "text": "I want to cancel my order"
 }
-````
-
----
+```
 
 ### Response
 
@@ -23,15 +20,9 @@
 }
 ```
 
----
-
 ## Notes
 
-* `text` must be a string
-* Response includes classification and confidence score
-* ML layer (`predict_category`): if preprocessing yields only whitespace, the API may return `category: "unknown"` and `score: 0.0` without loading model artifacts (align response schema with the FastAPI implementation when built)
-* LLM response may be added later
-
-```
-
-
+- `text` must be a string.
+- Response includes classification and confidence score.
+- ML layer (`predict_category`): if preprocessing yields only whitespace, the API may return `category: "unknown"` and `score: 0.0` without loading model artifacts (keep response schema aligned with the FastAPI implementation).
+- LLM fields may be added later.

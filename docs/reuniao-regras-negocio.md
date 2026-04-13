@@ -10,9 +10,9 @@
 ## Bloco 1 — Decide agora (trava o MVP se não responder)
 
 ### Sobre o usuário final
-- ✅ Quem usa o sistema: **atendente humano** pela interface do SmartTicket + **LLM** para casos simples automáticos
-- ✅ O sistema responde automaticamente via LLM quando possível; casos não resolvidos vão para fila humana
-- ✅ Humano no loop: sim — o atendente pega o ticket na interface e responde; o LLM nunca age sem supervisão indireta
+- [ ] Quem usa o sistema: **atendente humano** pela interface do SmartTicket + **LLM** para casos simples automáticos
+- [ ] O sistema responde automaticamente via LLM quando possível; casos não resolvidos vão para fila humana
+- [ ] Humano no loop: sim — o atendente pega o ticket na interface e responde; o LLM nunca age sem supervisão indireta
 
 ### Sobre classificação
 - ✅ Score baixo (< 0.75): sistema aguarda próximas mensagens (até 3), concatena e reclassifica. Após N mensagens sem score alto, vai direto para fila humana com flag "baixa confiança"
@@ -107,9 +107,3 @@
 
 ---
 
-## Como usar esse arquivo
-
-1. Leva para a reunião com Salim, Rafael e Luís
-2. Vai marcando as caixas conforme as decisões forem tomadas
-3. Anota as respostas abaixo de cada pergunta respondida
-4. **Bloco 1 e perguntas sobre o cliente piloto** são prioridade antes de qualquer outra coisa

@@ -1,73 +1,40 @@
-````markdown id="k9x3pz"
-# 📓 Notebooks — Data Exploration & Experiments
+# Notebooks — data exploration & experiments
 
-## 🎯 Purpose
+## Purpose
 
-This folder is used for:
+This folder is for:
 
-- Data exploration (EDA)  
-- Testing preprocessing techniques  
-- Experimenting with models  
-- Visualizing results  
+- Data exploration (EDA)
+- Testing preprocessing ideas
+- Model experiments
+- Visualizations
 
-Notebooks are meant for **experimentation**, not production code.
+Notebooks are for **experimentation**, not production code.
 
----
+## When to use notebooks
 
-## 🧠 When to Use Notebooks
+- Understand the dataset
+- Try cleaning / normalization variants
+- Compare models or features
+- Plot distributions
 
-Use notebooks when you need to:
+## When not to use notebooks
 
-- Understand the dataset  
-- Test text cleaning strategies  
-- Try different feature engineering approaches  
-- Compare model performance  
-- Visualize data distributions  
+Do **not** put production logic only in notebooks. Move validated code to:
 
----
+- `app/utils/`
+- `app/services/`
+- `app/ml/`
 
-## ❌ When NOT to Use Notebooks
-
-Do NOT:
-
-- Implement production logic here  
-- Build the final pipeline here  
-- Depend on notebooks for the system to work  
-
-Final logic must always be moved to:
-
-- `app/utils/`  
-- `app/services/`  
-- `app/ml/`  
-
----
-
-## 🏷️ Naming Convention
-
-Use ordered names:
+## Naming
 
 ```text
 01_dataset_exploration.ipynb
 02_text_cleaning_tests.ipynb
 03_baseline_model.ipynb
-````
-
----
-
-## ✅ Best Practices
-
-* Keep notebooks clean and readable
-* Add explanations for important steps
-* Avoid unnecessary code duplication
-* Once an experiment is validated → move logic to `app/`
-
----
-
-## 🔄 Workflow
-
-* Explore in notebook
-* Validate idea
-* Move final code to `app/`
-* Document decisions in `docs/ml-notes.md`
-
 ```
+
+## Practices
+
+- Keep notebooks readable; explain non-obvious steps
+- After an experiment wins → port to `app/` and note decisions in `docs/ml-notes.md`
