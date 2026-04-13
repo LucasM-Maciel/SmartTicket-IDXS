@@ -3,7 +3,7 @@ from typing import NamedTuple
 
 import pytest
 
-# conftest na raiz do repo → fixtures em tests/fixtures/
+
 _TESTS_DIR = Path(__file__).resolve().parent / "tests"
 
 

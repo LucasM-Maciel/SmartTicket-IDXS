@@ -1,32 +1,29 @@
-# Smart Ticket — Intelligent Ticket Triage System
+# Documentation index
 
-## Overview
-Smart Ticket is an intelligent ticket triage system that uses Machine Learning and LLMs to classify and respond to customer messages.
+**Project overview, setup, train/test commands, and roadmap:** see the [root README](../README.md).
 
-## Objective
-Receive unstructured text (customer messages) and:
-- classify the request (ML)
-- generate a response (LLM)
-- store data (SQL)
-- expose functionality via API
+## Core references
 
-## Tech Stack
-- Python
-- FastAPI
-- Pandas
-- Scikit-learn
-- SQL
-- LLM API
+| Document | Purpose |
+|----------|---------|
+| `project-context.md` | MVP scope, dev order, future technical planning |
+| `api-contracts.md` | `POST /predict` request/response shape |
+| `architecture.md` | System structure |
+| `ml-notes.md` | ML implementation notes and dataset |
+| `test-plan.md` | Testing strategy |
+| `dev-log.md` | Chronological work log |
+| `team-responsibilities.md` | Ownership by person |
+| `git-workflow.md` | Branching and collaboration |
+| `reuniao-regras-negocio.md` | Business alignment (PT) |
+| `product-vision-en.md` / `product-vision-pt.md` | Full product vision |
 
-## Testing
+## Testing & scripts
 
-- Test strategy and priorities: `docs/test-plan.md`
-- Implementations: `tests/`
-- Conventions and tips: `tests/best_practices.md`
-- Run pytest from repo root: `scripts/retest.ps1` or `scripts/retest.bat` — see `scripts/retest.md`
-- Script folder conventions: `scripts/best_practices.md`
+- Run tests: `scripts/retest.ps1` / `scripts/retest.bat` — details in `scripts/retest.md`
+- Test tips: `tests/best_practices.md`
+- Script conventions: `scripts/best_practices.md`
 
-## Architecture (High-Level)
+## Naming & editor
 
-```text
-Input → API → Pipeline → ML → LLM → Database → Output
+- `naming-conventions.md`
+- `cursor-rules.md`
