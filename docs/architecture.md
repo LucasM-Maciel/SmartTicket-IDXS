@@ -1,6 +1,6 @@
 # System Architecture
 
-> Last updated: 2026-04-16
+> Last updated: 2026-04-10
 
 ## Overview
 
@@ -35,6 +35,49 @@ Routers and services should reflect those boundaries (e.g. separate route module
 - **ADRs** — when the team **commits** to something (replica count, tenancy, Redis, where blobs live, **splitting ingest vs query**), record it under `docs/adr/`; until then, treat options below as **working assumptions**, not contracts.
 
 Diagrams may live in draw.io / Mermaid / Excalidraw; this file stays the narrative anchor.
+
+**Working Excalidraw (team):** [`docs/design system SmartTicket.excalidraw`](design%20system%20SmartTicket.excalidraw) — open in Cursor/VS Code with the Excalidraw extension (otherwise the file is JSON).
+
+---
+
+## Diagrams & build context (MVP → production)
+
+Use this section as **shared context** when implementing or extending diagrams. It aligns drawing choices with the modular-monolith MVP and documented evolution.
+
+### Two diagram “modes”
+
+| Mode | Purpose | Typical inputs |
+|------|---------|----------------|
+| **Technical MVP** | Validate core path: pipeline, model, persistence, priority ordering | Synthetic / test dataset → API (no WhatsApp on the same canvas unless cramped) |
+| **Product MVP** | End-to-end product story | WhatsApp / BSP → webhook → API → … → DB; **outbound** API → BSP → customer; attendant UI ↔ API |
+
+Both modes still show **one deployable API** (modular monolith). Optional **sub-boxes or notes** inside the API (“ingestion vs query modules”) clarify future split **without** drawing two separate APIs until the team follows [`docs/adr/0001-mvp-modular-monolith-and-evolution-to-two-apis.md`](adr/0001-mvp-modular-monolith-and-evolution-to-two-apis.md).
+
+### Legend (recommended on diagrams)
+
+- **Solid boxes** — services **you** deploy and operate (FastAPI app, UI host, etc.).
+- **Dashed boxes** — **external** providers (BSP / WhatsApp Cloud, LLM vendor) **or** a **thin internal HTTP client** (“API LLM” adapter) that only talks outbound; label the legend so readers are not confused by adapters sitting *inside* the environment boundary.
+
+### WhatsApp / webhook path
+
+- **Inbound:** BSP / channel provider → **HTTPS webhook** → **load balancer or edge** (if used) → **API SmartTicket**. Webhooks hit **your** URL; they do not write to the DB directly.
+- **Outbound:** **API** → provider **send-message** API → WhatsApp → user. Omitting outbound arrows makes the architecture look ingestion-only.
+- Optional labels on **user ↔ BSP** arrows (e.g. user message vs delivery/status) improve readability.
+
+### Cloud, Docker, database, secrets
+
+- **Cloud (dashed outer frame)** — everything running in **your** cloud account: edge/LB, compute, managed DB, UI if hosted there. **Actors** (customer, attendant browser) and **third-party** APIs stay **outside** that frame unless you deliberately draw a different convention (then add a one-line legend).
+- **Docker** — represent as “API runs in container(s)”; **database** is usually **managed Postgres** and **not** in the same container as the app. Keep DB **inside** the cloud frame but **outside** the “app container” grouping.
+- **Secrets** — not a user-data flow; show as **env / Secret Manager** injected at runtime (note or small dashed box → API or container), not as a parallel business pipeline.
+
+### Priority queue vs message broker
+
+- **“Priority queue”** in diagrams means the **product** queue: ordering / aging (see **Scheduled jobs** in Tech stack). **Baseline MVP does not assume RabbitMQ** (or any broker); introducing one is an **ADR** if the team needs async workers, multiple consumers, or cross-service buffering.
+- If the drawing looks like a broker, add a caption: **logical queue (Postgres + scheduler)** unless an ADR says otherwise.
+
+### Evolving to two APIs
+
+If ingestion and query modules stay **bounded** (routers, services, minimal cross-calls), splitting into **two deployables** is **mostly mechanical** in code but adds **operational** work (two releases, auth between services if needed, clear DB write ownership). It is **not** a full rewrite when boundaries are clean; cost is often **ops + contracts**, not folder shuffling.
 
 ---
 

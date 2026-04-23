@@ -10,19 +10,17 @@
 ## Bloco 1 — Decide agora (trava o MVP se não responder)
 
 ### Sobre o usuário final
-- [ ] Quem usa o sistema: **atendente humano** pela interface do SmartTicket + **LLM** para casos simples automáticos
-- [ ] O sistema responde automaticamente via LLM quando possível; casos não resolvidos vão para fila humana
-- [ ] Humano no loop: sim — o atendente pega o ticket na interface e responde; o LLM nunca age sem supervisão indireta
+- ✅ Quem usa o sistema: **atendente humano** pela interface do SmartTicket + **LLM** para casos simples automáticos
+- ✅  O sistema responde automaticamente via LLM quando possível; casos não resolvidos vão para fila humana
+- ✅ Humano no loop: sim — o atendente pega o ticket na interface e responde; o LLM nunca age sem supervisão indireta
 
 ### Sobre classificação
 - ✅ Score baixo (< 0.75): sistema aguarda próximas mensagens (até 3), concatena e reclassifica. Após N mensagens sem score alto, vai direto para fila humana com flag "baixa confiança"
 - ✅ Classificação na primeira mensagem que atingir threshold — não necessariamente a primeira mensagem da conversa
 - [ ] Tem uma categoria "outros" para tickets que não se encaixam nas 5 categorias? → **decidir com o time**
-- [ ] Um ticket pode ter mais de uma categoria ao mesmo tempo? → **decidir com o time**
-- [ ] O que acontece se o texto vier vazio ou inválido? → **definir tratamento de erro**
 
 ### Sobre falhas do LLM
-- [ ] Se o LLM falhar (timeout, rate limit), o sistema retorna a categoria sem resposta ou retorna erro ao cliente? → **decidir com o time**
+- ✅ Se o LLM falhar (timeout, rate limit), o sistema retorna a categoria sem resposta ou retorna erro ao cliente? → **decidir com o time**
 
 ---
 
