@@ -10,3 +10,8 @@ class PredictResponse(BaseModel):
     category: str
     score: float
 
+
+class HealthResponse(BaseModel):
+    status: str
+    model_present: bool
+    vectorizer_present: bool
