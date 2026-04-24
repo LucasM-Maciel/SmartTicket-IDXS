@@ -167,5 +167,27 @@
 - Wrapper scripts reduce friction for contributors running tests from the wrong working directory.
 
 ### Next Steps
-- Open PR and hand off to API/DB track (`FastAPI`, persistence, `test_api.py`).
-- Later: operational retraining entry point (`scripts/retrain.py` or equivalent) when the feedback-loop milestone is scheduled.
+- *(Superseded 2026-04-12 — see below.)* API technical MVP landed on `feature/api-mvp`; next is merge + DB/persistence track.
+
+---
+
+## 2026-04-12 (Lucas)
+
+### What was done
+- Documented **`feature/api-mvp` vs `develop`:** new file `docs/branch-feature-api-mvp-vs-develop.md` (routes, schemas, `limits`, training row filter, config env vars, `api-contracts` / `security-and-deployment`, `test_api`, deps)
+- Updated **`docs/project-context.md`**, **`docs/ml-notes.md`**, **`docs/README.md`**, and **`README.md`** so the PR narrative matches: technical API MVP lives on `feature/api-mvp`; `develop` still has stub routes until merge
+- Listed **what remains** after this PR: DB persistence, auth/rate limits, product channels, retrain automation, hardening (cross-ref `security-and-deployment.md`)
+- Clarified **authorship:** the shipped technical MVP (including API) is **entirely Lucas**; **`docs/team-responsibilities.md`** updated so Salim / Rafael / Luís are framed as **future** ownership, not contributors to this MVP
+
+### Problems
+- None (documentation sync)
+
+### Solutions
+- N/A
+
+### Learnings
+- Keeping a short branch-delta doc avoids reviewers guessing what `develop` already had
+
+### Next Steps
+- Merge `feature/api-mvp` → `develop` when approved; then collapse “on branch” wording in `project-context` / `ml-notes` to “in `develop`”
+- DB + persistence + Salim track

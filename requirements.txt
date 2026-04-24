@@ -24,4 +24,3 @@ psycopg2-binary
 # --- Testing & Quality Assurance ---
 pytest
 httpx
-black  # For code formatting

@@ -96,14 +96,15 @@ To quiet the console: pass `zero_division` to `classification_report` in `app/ml
 * `clean_text` implemented in `app/utils/text_cleaning.py` (lowercase, strip, regex symbol removal, whitespace normalization)
 * `normalize_text` implemented in `app/utils/normalizer.py` (stopword removal via NLTK, configurable language, defaults to English)
 * `run_pipeline` implemented in `app/services/pipeline.py` (orchestrates `clean_text` → `normalize_text`)
-* `train_model` implemented in `app/ml/train.py` (TF-IDF + Logistic Regression, 75/25 split, artifacts saved via `joblib`): configurable CSV column names and output paths; rows with empty text after `run_pipeline` are dropped before splitting
+* `train_model` implemented in `app/ml/train.py` (TF-IDF + Logistic Regression, 75/25 split, artifacts saved via `joblib`): configurable CSV column names and output paths; rows with missing text/label are dropped; rows over `MAX_TICKET_TEXT_CHARS` are dropped; rows with empty text after `run_pipeline` are dropped before splitting
 * `predict_category` implemented in `app/ml/predict_category.py` (category + confidence); blank preprocessed text → `unknown` / `0.0` without loading artifacts; lazy thread-safe load/cache of model and vectorizer from `MODEL_PATH` / `VECTORIZER_PATH`
 * Column names for production CSV: `TEXT_COLUMN` / `LABEL_COLUMN` in `app/core/config.py`
 * Non-string inputs handled in both preprocessing functions: returns empty string to keep pipeline safe
 * First training run completed — results not representative due to synthetic dataset (see Dataset note below)
-* Unit tests (pytest): `test_preprocessing.py`, `test_normalizer.py`, `test_pipeline.py`, `test_train.py`, `test_predict.py` — fixtures under `tests/fixtures/`; see `docs/test-plan.md` and `tests/best_practices.md`; `test_api.py` stub pending (with FastAPI)
-* **Pipeline + prediction-model slice (Lucas) — closed 2026-04-11:** full offline train + inference path without persisting predictions to a database. Run tests from repo root: `python -m pytest` or `scripts/retest.ps1` / `scripts/retest.bat` (see `scripts/retest.md`).
-* **Future (operations / feedback loop):** dedicated retrain script (e.g. `scripts/retrain.py`) when automated retraining is implemented — not required to close this milestone.
+* Unit tests (pytest): `test_preprocessing.py`, `test_normalizer.py`, `test_pipeline.py`, `test_train.py`, `test_predict.py`, and **`test_api.py`** (FastAPI `TestClient` — on branch **`feature/api-mvp`**) — fixtures under `tests/fixtures/`; see `docs/test-plan.md` and `tests/best_practices.md`
+* **Pipeline + prediction-model slice — closed 2026-04-11:** full offline train + inference path without persisting predictions to a database. Run tests from repo root: `python -m pytest` or `scripts/retest.ps1` / `scripts/retest.bat` (see `scripts/retest.md`).
+* **API technical MVP (branch `feature/api-mvp`):** `GET /health`, `POST /predict` with `MAX_TICKET_TEXT_CHARS` alignment in `train_model`; see `docs/api-contracts.md`, `docs/security-and-deployment.md`, and **`docs/branch-feature-api-mvp-vs-develop.md`**
+* **Future (operations / feedback loop):** dedicated retrain script (e.g. `scripts/retrain.py`) when automated retraining is implemented
 
 ---
 

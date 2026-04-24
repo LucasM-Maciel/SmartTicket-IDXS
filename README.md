@@ -239,6 +239,8 @@ The system evolves through a continuous learning cycle:
 
 ## 📡 API Contract (Current)
 
+The `text` field is capped for API safety; see `app/core/limits.py` and `docs/api-contracts.md`.
+
 ### 📥 Request
 
 ```json
@@ -271,16 +273,17 @@ The system evolves through a continuous learning cycle:
 - 🌐 Multilingual pipeline support (`language` parameter, English default)
 - 🧪 Pytest coverage for preprocessing, normalizer, pipeline, training, and `predict_category` (`tests/` — strategy in `docs/test-plan.md`, tips in `tests/best_practices.md`)
 - Test runners `scripts/retest.ps1` / `scripts/retest.bat` — invoke pytest from repo root (see `scripts/retest.md`)
-- **MVP slice (2026-04-11):** pure pipeline + training + `predict_category` is complete. **Out of scope for this slice:** persisting tickets or predictions to a database after inference (API + persistence track).
+- **MVP slice (2026-04-11):** pure pipeline + training + `predict_category` is complete. **Out of scope for that slice:** persisting tickets or predictions to a database after inference.
+- **API technical MVP (branch `feature/api-mvp`):** `GET /health`, `POST /predict`, Pydantic limits, tests in `tests/test_api.py` — see `docs/branch-feature-api-mvp-vs-develop.md` (merges into `develop` when the PR lands)
 
 ---
 
 ### 🚧 In Progress
 
-- API layer (FastAPI — `POST /predict` endpoint)
+- Merge API MVP branch to `develop` (see `docs/branch-feature-api-mvp-vs-develop.md`)
 - Real-world dataset sourcing (current dataset is synthetic)
 - Model evaluation with reliable data
-- API tests (`test_api.py` stub) when routes exist
+- Database persistence and full end-to-end flows (post-prediction)
 
 ---
 
@@ -310,6 +313,88 @@ Planned metrics:
 - Business-oriented metrics (resolution success, response time)
 
 > ⚠️ Evaluation will be meaningful only after replacing the dataset with real-world data.
+
+---
+
+<a id="smartticket-mvp-checklists"></a>
+## 📋 Checklists: Technical MVP · Functional MVP · Final product
+
+> **Key (GitHub):** the *Done* column uses ✅/⬜; lines with `- [ ]` / `- [x]` are native *task lists* (renders as checkboxes in the repository view). Target database: **PostgreSQL**. **Technical MVP** — *Technical SmartTicket MVP* (flow: test dataset → modular API → pipeline → prediction → priority queue → DB). **Functional MVP** — *Smart Ticket Architecture* / *Functional MVP* (WhatsApp → *cloud* → Ingestion → model + LLM + queue + DB → UI). **Final product** — same diagram family, with **Ingest/Query** split, **RabbitMQ** for the queue, LLM, and clearer data consumption (current vision below); business/roadmap detail: `docs/product-vision-en.md` / `docs/product-vision-pt.md`.
+
+### 1) Technical MVP (*Technical SmartTicket MVP — diagram*)
+
+| Done | Deliverable | Notes |
+|:-----:|--------------|--------|
+| ✅ | **PostgreSQL** as the target RDBMS | Architecture decision; wiring in code in progress |
+| ✅ | **Test dataset** (synthetic tickets / sample) | CSV + test requests with body `{"text": "…"}` on `POST /predict` |
+| ✅ | Modular **SmartTicket API** (FastAPI) | `GET /health`, `POST /predict` — see `docs/api-contracts.md` |
+| ✅ | **Preprocessing** (pipeline) | `clean_text` → `normalize_text` → `run_pipeline` |
+| ✅ | **Prediction model** — classification + *score* | `predict_category`, TF-IDF + logistic regression; `joblib` artifacts |
+| ⬜ | **Urgency** in the API flow → persist with classification + *score* | Not yet exposed/derived beyond class + *score* in the minimal contract |
+| ⬜ | **Priority queue** (ordered by urgency) | Diagram: *Priority queue*; not implemented in the current API |
+| ⬜ | **PostgreSQL** — persist *ticket* + classification + *score* | Next phase: schema + write after `POST /predict` |
+| ✅ | Limits, tests, security and contract docs | `app.core.limits`, `tests/test_api.py`, `docs/security-and-deployment.md` |
+
+**Task list (for Git/PRs; mirrors the table):**
+
+- [x] Test dataset + HTTP test calls (body with `text`)
+- [x] Modular FastAPI (`/health`, `/predict`)
+- [x] Preprocessing
+- [x] Model: category + *confidence score*
+- [ ] Urgency wired into the persistence path (as in the diagram)
+- [ ] Priority queue (*priority queue* by urgency)
+- [ ] PostgreSQL: persist ticket + classification + *score*
+- [x] `MAX_TICKET_TEXT_CHARS` aligned train ↔ API; API tests; documentation
+
+### 2) Functional MVP (*Smart Ticket Architecture / Functional MVP*)
+
+As in the diagrams: **Ticket owner** (WhatsApp) → **WhatsApp API (BSP)** / **webhook** → **LB** → **API SmartTicket Ingestion**; in the *cloud* — **Model** (preprocessing, classification, *score*, urgency), **LLM** (*score*/classification context), **queue** (*Postgres* + *APScheduler* / urgency-prioritized), **DB**; **SmartTicket Interface Beta** (agent) and closed loop (LLM or agent response).
+
+| Done | Deliverable | Notes |
+|:-----:|------------|--------|
+| ⬜ | **Ingress** — WhatsApp app → **BSP** → **webhook** → **load balancer** → tickets into ingestion | Not in the repo yet |
+| ⬜ | **API SmartTicket Ingestion** (orchestrates: model, LLM, queue, persistence, UI) | Today: partial core = FastAPI with `GET /health` and `POST /predict` (no webhooks, no channel integration) |
+| ⬜ | **Prediction model** — pipeline; output with **classification + *score* + urgency** (and in diagram variants, *entity extraction* / *degree to match*) | Today: category + *score*; urgency/entity not in the full path yet |
+| ⬜ | **LLM provider** (OpenAI / Anthropic, etc.) — *Raw ticket* + *score* / classification (context) → **LLM response** | ML+LLM hybrid planned; not integrated in code |
+| ⬜ | **Queue & scheduling** — *Postgres* + **APScheduler** (or multi-queue logic) — *prioritized by urgency score* | Diagram: queue; not implemented |
+| ⬜ | **DB** — *read*; *write* ticket + classification + (urgency / queue) + agent reply; variant: persist “raw + model output” | Schema/persistence in progress |
+| ⬜ | **UI** — *SmartTicket Interface Beta*; **agent**; *data consuming* from Ingestion | Not in the repo |
+| ⬜ | **User response** — *LLM* or agent (and *status* / *feedback* to the ticket owner) | Out of scope for the current MVP |
+
+**Functional MVP task list:**
+
+- [ ] Ingress: WhatsApp → BSP / webhook / LB → tickets into ingestion
+- [ ] Ingestion API end-to-end (today: isolated HTTP *predict* only)
+- [ ] Model: classification + *score* + **urgency** (and entity if applicable) in the same path as the rest of the system
+- [ ] **LLM:** request with ticket + context (*score* / classification) → response
+- [ ] Queue: *Postgres* + *APScheduler* (or equivalent) — **urgency**-based priority
+- [ ] **PostgreSQL:** persist ticket, model outputs, queue/urgency, replies; reads for the API and UI
+- [ ] **UI** (agent, Interface Beta) + data consumption from Ingestion
+- [ ] Close the loop: response or *feedback* to the **ticket owner** (LLM and/or agent)
+
+### 3) Final product (Smart Ticket Architecture, final-vision — current state in diagrams)
+
+Step beyond functional MVP: **two services** (ingest vs. query), an explicit **RabbitMQ** message queue, and **LLM** on the **Query API** (UI-aligned integration). Overall flow: **Ticket owner** ↔ **WhatsApp** ↔ **BSP** ↔ **webhook** / **load balancer**; in the *cloud* — **API SmartTicket Ingestion** (Docker) coordinates the **model** (preprocessing → classification + *score* + urgency), **queue** (*Priority queue* with **RabbitMQ**), and **writes** to the **DB**; **API SmartTicket Query** (Docker) **reads** the DB, calls the **LLM** (*raw ticket* + *score* / classification) and feeds the **UI** (*data consuming*); persistence and egress include **agent messages**, **LLM draft**, and **replies** back to the channel (LLM and/or agent, including *Attendant or LLM response* / *Write messages…* in the diagram).
+
+| Done | Deliverable | Notes |
+|:-----:|------------|--------|
+| ⬜ | **Edge ingress & egress** — *Ticket* and *LLM or attendant answer*; **BSP**; **webhook**; **LB**; *Read database*; message response/write on the WhatsApp path | Bidirectional flow in the design; not implemented in the repo |
+| ⬜ | **API SmartTicket Ingestion** (container) — *Tickets* → model, queue, DB; write: persist *ticket* + *classification* + *score* + *urgency*; *persist attendant messages* (label variants in diagrams) | Current base: `POST /predict` with no real channel ingestion |
+| ⬜ | **Prediction model** in the path (preprocessing ↔ classification, *score*, urgency) | *Score* + category in code; integrate and persist urgency |
+| ⬜ | **Priority queue (RabbitMQ)** — *Urgency* in → *prioritized by urgency* out, wired to Ingestion | In final-product diagrams; not in the repo |
+| ⬜ | **PostgreSQL** — full *read* / *write*: ticket, classification, *score*, urgency, work queue, messages; *Write: messages / LLM draft / attendant reply* (persistence/egress path) | Reconcile schema and contracts with `docs/architecture.md` |
+| ⬜ | **API SmartTicket Query** (container) — DB read, **LLM** (*raw ticket* + *score* + *classification* as context → *LLM response*), *Data consuming* for the **UI** | Query API separate from ingestion |
+| ⬜ | **UI** — *SmartTicket Interface* (purple layer); agent; consumes **Query** (not Ingestion alone) | Front end not in the repo |
+| ⬜ | **Operations** — Docker (both services), *secrets*, observability, *hardening*; align with `docs/security-and-deployment.md` and product vision | See docs for detail |
+
+**Final product task list:**
+
+- [ ] Channel edge: Ticket owner ↔ **WhatsApp** ↔ **BSP** ↔ **webhook** / **LB**; **response** (LLM and/or agent) and *feedback*
+- [ ] **Ingestion** (Docker): tickets → **pre-processing** → **model** → classification + *score* + **urgency** → **RabbitMQ** (*priority by urgency*) → **writes** to the DB
+- [ ] **PostgreSQL:** combined ticket+ML+urgency; **messages** (agent, LLM draft); reads for Query
+- [ ] **Query** (Docker): **read** the DB; **LLM** with context (*score* + classification); *Data consuming* → **UI**
+- [ ] **UI** (Interface) + agent; response *loop* and persistence as in the diagrams
+- [ ] **Product / business** (KPI, analytics, multi-channel, etc.) — `docs/product-vision-en.md` / `docs/product-vision-pt.md`
 
 ---
 
@@ -382,11 +467,13 @@ See `scripts/retest.md` for details.
 
 ---
 
-### 6. Run API *(when implemented)*
+### 6. Run API
 
 ```bash
 uvicorn app.main:app --reload
 ```
+
+Endpoints: `GET /health` (readiness), `POST /predict` (JSON `{"text":"…"}`). Details: `docs/api-contracts.md`.
 
 ---
 
@@ -396,7 +483,7 @@ uvicorn app.main:app --reload
 
 - [x] Preprocessing pipeline
 - [x] ML classification model (train + `predict_category`; no DB write after prediction yet)
-- [ ] API endpoint
+- [x] API surface (`GET /health`, `POST /predict`) — on `feature/api-mvp` until merged to `develop`
 
 ---
 
@@ -421,15 +508,18 @@ uvicorn app.main:app --reload
 ## 📄 Documentation
 
 - **Index of all docs** → `docs/README.md`
-- System Architecture → `docs/architecture.md`
+- System Architecture → `docs/architecture.md` (Excalidraw interactive link: `docs/diagrams/README.md`)
 - API Contracts → `docs/api-contracts.md`
+- Security & deployment (MVP) → `docs/security-and-deployment.md`
 - ML Notes → `docs/ml-notes.md`
 - Test Plan → `docs/test-plan.md`
 - Running tests (repo root) → `scripts/retest.md`
 - Scripts conventions → `scripts/best_practices.md`
 - Project context → `docs/project-context.md`
+- MVP & product checklists (technical / functional / final) → **[Checklists](#smartticket-mvp-checklists) in this README**
 - Development log → `docs/dev-log.md`
 - Product vision (EN / PT) → `docs/product-vision-en.md`, `docs/product-vision-pt.md`
+- Branch delta (`feature/api-mvp` vs `develop`) → `docs/branch-feature-api-mvp-vs-develop.md`
 - Team Responsibilities → `docs/team-responsibilities.md`
 - License → `LICENSE`
 

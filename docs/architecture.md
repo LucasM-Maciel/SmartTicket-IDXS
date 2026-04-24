@@ -1,6 +1,6 @@
 # System Architecture
 
-> Last updated: 2026-04-10
+> Last updated: 2026-04-12
 
 ## Overview
 
@@ -37,6 +37,17 @@ Routers and services should reflect those boundaries (e.g. separate route module
 Diagrams may live in draw.io / Mermaid / Excalidraw; this file stays the narrative anchor.
 
 **Working Excalidraw (team):** [`docs/design system SmartTicket.excalidraw`](design%20system%20SmartTicket.excalidraw) — open in Cursor/VS Code with the Excalidraw extension (otherwise the file is JSON).
+
+### Excalidraw in the browser (zoom, pan, edit)
+
+GitHub does not run the Excalidraw canvas in the README. For the same experience as in the app, use a **Share** link from Excalidraw, or a **`.excalidraw`** file in the repo — see [docs/diagrams/README.md](diagrams/README.md).
+
+**One-click link** (Excalidraw Share — zoom, pan in the browser):  
+[Open architecture diagram in Excalidraw](https://excalidraw.com/#json=k3_Yr1wSJcZPRq9Y31wAc,umtchKOdn_ai6EmrwDaEew)
+
+> **Tip:** after the canvas opens, switch Excalidraw to **dark mode** (sun/moon icon in the toolbar, or **Menu** → theme) for better contrast and readability of this diagram.
+
+**Source in repo (optional, for diffs/PRs):** add [docs/diagrams/architecture.excalidraw](diagrams/architecture.excalidraw) when you export it, and keep it in sync; viewers can **Open** the file in [excalidraw.com](https://excalidraw.com) after download.
 
 ---
 
