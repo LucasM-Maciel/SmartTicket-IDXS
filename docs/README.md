@@ -8,6 +8,7 @@
 |----------|---------|
 | `project-context.md` | MVP scope, dev order, future technical planning |
 | `api-contracts.md` | `POST /predict` request/response shape |
+| `security-and-deployment.md` | MVP hardening, artifact safety, production run notes |
 | `architecture.md` | System structure; MVP modular monolith → two APIs (ingest / query) |
 | `adr/` | Architecture decision records (start with `0001-…`) |
 | `ml-notes.md` | ML implementation notes and dataset |

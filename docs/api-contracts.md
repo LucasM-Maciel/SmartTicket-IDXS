@@ -20,12 +20,12 @@ Matches the **“Technical SmartTicket MVP”** diagram: a **modular FastAPI** o
 
 | Path | Role |
 |------|------|
-| `GET /health` | Readiness: artifact *files* exist (`.pkl` paths from `app/core/config.py`). |
+| `GET /health` | Readiness: artifact *files* exist (paths from `app/core/config.py`, overridable via env — see *Conventions*). |
 | `POST /predict` | One-shot classification on a `text` string; returns `text` echo + `category` + `score`. |
 
 Optional later without changing the diagram’s core story: `GET /version` (debug only).
 
-**Status codes you care about first:** **200** on success, **422** on invalid body, **503** when not ready to infer (missing artifacts) — see each route below.
+**Status codes you care about first:** **200** on success, **422** on invalid body (including `text` over the max length), **503** when not ready to infer (missing artifacts) — see each route below.
 
 ---
 
@@ -42,14 +42,13 @@ Optional later without changing the diagram’s core story: `GET /version` (debu
 
 ```json
 {
-  "status": "ready",
-  "model_present": true,
-  "vectorizer_present": true
+  "status": "ready"
 }
 ```
 
 ### Notes
 
+- The body is intentionally **minimal** (`status` only) so a public probe does not reveal *which* artifact is missing.
 - Returning **200** with `not_ready` in the body **without** **503** is a weaker contract; if you do that, say so here and in the route.
 
 ---
@@ -66,7 +65,8 @@ Optional later without changing the diagram’s core story: `GET /version` (debu
 }
 ```
 
-- `text` is required, string.
+- `text` is required and must be a JSON string (including `""`). The schema does not reject empty or whitespace-only values; those still go through preprocessing.
+- **Max length:** `text` may not exceed **`MAX_TICKET_TEXT_CHARS`** (see `app/core/limits.py`, currently **50_000** characters). If it does, the API responds with **422** (validation error).
 
 ### Response (200)
 
@@ -80,15 +80,27 @@ Optional later without changing the diagram’s core story: `GET /version` (debu
 
 ### Notes
 
-- If preprocessing yields only whitespace, the implementation may return `category: "unknown"`, `score: 0.0` without loading model artifacts.
-- If artifacts are missing on first load, a **503** (or `detail` error) is appropriate; keep behavior aligned with `GET /health`.
+- After preprocessing, if the text is empty or only whitespace, the implementation returns `category: "unknown"`, `score: 0.0` without loading model artifacts (this covers `{"text": ""}` and bodies like `{"text": "   "}`).
+- If model artifacts are missing when inference runs, the API responds with **503** and FastAPI’s default error body, with `detail` exactly:
+
+  `Model artifacts missing; check GET /health`
+
+  (consistent with `GET /health` returning `not_ready` when files are absent.)
 
 ---
 
 ## Conventions (technical MVP)
 
 - **Content-Type** for request bodies: `application/json` unless noted.
-- **Errors:** FastAPI default `{"detail": ...}` is fine until you add a shared error schema.
+- **Errors:** FastAPI default `{"detail": ...}` is fine until you add a shared error schema. For `POST /predict` artifact failures, `detail` is stable (see route notes above).
+- **Limits:** `app/core/limits.py` — e.g. max length of `text` on `POST /predict` (shared with the Pydantic schema).
+- **Paths (`app/core/config.py`):** defaults point at the repo layout (`artifacts/*.pkl`, dataset under `app/data/...`). Optional overrides — if set to a non-empty string, that path is used (`~` is expanded):
+
+  | Variable | Role |
+  |----------|------|
+  | `SMARTTICKET_MODEL_PATH` | Trained model `.pkl` |
+  | `SMARTTICKET_VECTORIZER_PATH` | Vectorizer `.pkl` |
+  | `SMARTTICKET_DATASET_PATH` | Training CSV (training script / notebooks) |
 
 ---
 

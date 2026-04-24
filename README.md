@@ -239,6 +239,8 @@ The system evolves through a continuous learning cycle:
 
 ## 📡 API Contract (Current)
 
+The `text` field is capped for API safety; see `app/core/limits.py` and `docs/api-contracts.md`.
+
 ### 📥 Request
 
 ```json
@@ -423,6 +425,7 @@ uvicorn app.main:app --reload
 - **Index of all docs** → `docs/README.md`
 - System Architecture → `docs/architecture.md`
 - API Contracts → `docs/api-contracts.md`
+- Security & deployment (MVP) → `docs/security-and-deployment.md`
 - ML Notes → `docs/ml-notes.md`
 - Test Plan → `docs/test-plan.md`
 - Running tests (repo root) → `scripts/retest.md`
