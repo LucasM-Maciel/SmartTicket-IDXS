@@ -1,5 +1,7 @@
 # API contracts (SmartTicket-IDXS)
 
+> **Branch note:** For what is implemented on `feature/api-mvp` vs the current `develop` baseline, see **`branch-feature-api-mvp-vs-develop.md`**.
+
 > This file describes **HTTP JSON** contracts. The **primary scope** below is the **technical MVP** (synthetic tickets → API → ML → persist/queue *as a design target*). Broader product routes (WhatsApp, attendant CRUD) live in the appendix.
 
 ---

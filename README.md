@@ -273,16 +273,17 @@ The `text` field is capped for API safety; see `app/core/limits.py` and `docs/ap
 - 🌐 Multilingual pipeline support (`language` parameter, English default)
 - 🧪 Pytest coverage for preprocessing, normalizer, pipeline, training, and `predict_category` (`tests/` — strategy in `docs/test-plan.md`, tips in `tests/best_practices.md`)
 - Test runners `scripts/retest.ps1` / `scripts/retest.bat` — invoke pytest from repo root (see `scripts/retest.md`)
-- **MVP slice (2026-04-11):** pure pipeline + training + `predict_category` is complete. **Out of scope for this slice:** persisting tickets or predictions to a database after inference (API + persistence track).
+- **MVP slice (2026-04-11):** pure pipeline + training + `predict_category` is complete. **Out of scope for that slice:** persisting tickets or predictions to a database after inference.
+- **API technical MVP (branch `feature/api-mvp`):** `GET /health`, `POST /predict`, Pydantic limits, tests in `tests/test_api.py` — see `docs/branch-feature-api-mvp-vs-develop.md` (merges into `develop` when the PR lands)
 
 ---
 
 ### 🚧 In Progress
 
-- API layer (FastAPI — `POST /predict` endpoint)
+- Merge API MVP branch to `develop` (see `docs/branch-feature-api-mvp-vs-develop.md`)
 - Real-world dataset sourcing (current dataset is synthetic)
 - Model evaluation with reliable data
-- API tests (`test_api.py` stub) when routes exist
+- Database persistence and full end-to-end flows (post-prediction)
 
 ---
 
@@ -384,11 +385,13 @@ See `scripts/retest.md` for details.
 
 ---
 
-### 6. Run API *(when implemented)*
+### 6. Run API
 
 ```bash
 uvicorn app.main:app --reload
 ```
+
+Endpoints: `GET /health` (readiness), `POST /predict` (JSON `{"text":"…"}`). Details: `docs/api-contracts.md`.
 
 ---
 
@@ -398,7 +401,7 @@ uvicorn app.main:app --reload
 
 - [x] Preprocessing pipeline
 - [x] ML classification model (train + `predict_category`; no DB write after prediction yet)
-- [ ] API endpoint
+- [x] API surface (`GET /health`, `POST /predict`) — on `feature/api-mvp` until merged to `develop`
 
 ---
 
@@ -423,7 +426,7 @@ uvicorn app.main:app --reload
 ## 📄 Documentation
 
 - **Index of all docs** → `docs/README.md`
-- System Architecture → `docs/architecture.md`
+- System Architecture → `docs/architecture.md` (Excalidraw interactive link: `docs/diagrams/README.md`)
 - API Contracts → `docs/api-contracts.md`
 - Security & deployment (MVP) → `docs/security-and-deployment.md`
 - ML Notes → `docs/ml-notes.md`
@@ -433,6 +436,7 @@ uvicorn app.main:app --reload
 - Project context → `docs/project-context.md`
 - Development log → `docs/dev-log.md`
 - Product vision (EN / PT) → `docs/product-vision-en.md`, `docs/product-vision-pt.md`
+- Branch delta (`feature/api-mvp` vs `develop`) → `docs/branch-feature-api-mvp-vs-develop.md`
 - Team Responsibilities → `docs/team-responsibilities.md`
 - License → `LICENSE`
 

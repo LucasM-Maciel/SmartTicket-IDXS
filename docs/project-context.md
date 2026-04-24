@@ -39,27 +39,35 @@ WhatsApp → Preprocessing Pipeline → ML Classification → LLM auto-resolve
 
 ## MVP definition
 
+### Ownership of what is shipped today
+
+The **technical MVP to date** (pipeline, ML, FastAPI routes on `feature/api-mvp`, tests, and related docs) is **implemented entirely by Lucas**. Nothing in that deliverable is authored or owned by other team members (Salim, Rafael, Luís, etc.); their roles in `docs/team-responsibilities.md` describe **planned or future** collaboration, not contributions to this codebase slice.
+
 ### Full product MVP (target: end of April 2026)
 
 What the shipped product must include for the first release:
 - ML-backed classification (category + confidence) exposed through the API
 - API calling the pipeline (`POST /predict`)
-- `POST /health` endpoint with model load status
+- `GET /health` endpoint with model load status
 - Database persistence (tickets, contacts, messages)
 - Preprocessing pipeline integrated with the HTTP layer
 - Edge case handling in predict (empty text, None, very short input), enforced end-to-end once routes exist
 - Model training via `python -m app.ml.train` (writes artifacts under `artifacts/`)
 - Automated tests including API coverage when FastAPI routes are implemented
 
-### Completed technical slice (2026-04-11)
+### Completed technical slice — pipeline + ML (2026-04-11)
 
-Delivered by the pipeline/ML track **before** API + DB integration. In scope: **text → preprocess → offline train → offline infer → unit tests**. Not in scope: persisting tickets or predictions after classification, or any HTTP surface.
+Delivered by the pipeline/ML track **before** DB integration. In scope: **text → preprocess → offline train → offline infer → unit tests**. Not in scope: persisting tickets or predictions after classification.
 
 - Preprocessing pipeline working independently (`clean_text` → `normalize_text` → `run_pipeline`)
 - ML model classifying tickets offline (`train_model`, `predict_category`, `joblib` artifacts)
 - Edge case handling in `predict_category` (empty / blank preprocessed text → `unknown` / `0.0`)
-- Unit tests: pipeline, preprocessing, ML train/predict (`tests/test_api.py` placeholder until FastAPI exists)
+- Unit tests: pipeline, preprocessing, ML train/predict
 - Convenience test runners: `scripts/retest.ps1` / `scripts/retest.bat` (see `scripts/retest.md`)
+
+### API technical MVP (`feature/api-mvp` vs `develop`)
+
+Implemented on branch **`feature/api-mvp`** (see **`docs/branch-feature-api-mvp-vs-develop.md`** for a full diff vs `develop`). Brings **`GET /health`**, **`POST /predict`**, Pydantic validation, shared `MAX_TICKET_TEXT_CHARS`, training row alignment, env-based artifact paths, expanded `api-contracts.md`, **`docs/security-and-deployment.md`**, and **`tests/test_api.py`** against the real app. Still **no** DB write after prediction.
 
 ---
 
@@ -104,20 +112,20 @@ Delivered by the pipeline/ML track **before** API + DB integration. In scope: **
 
 ### MVP (target: end of April 2026)
 
-**Pipeline + prediction model (Lucas) — complete as of 2026-04-11:** preprocessing, training (`train_model`), inference (`predict_category`), ML unit tests, and repo-root pytest wrappers (`scripts/retest.*`). This milestone is **only** the text → model path; it does **not** include saving tickets or predictions to a database after classification (that requires the FastAPI + persistence track).
+**Pipeline + prediction model — complete as of 2026-04-11:** preprocessing, training (`train_model`), inference (`predict_category`), ML unit tests, and repo-root pytest wrappers (`scripts/retest.*`). Does **not** include saving tickets or predictions to a database.
 
-**`tests/test_api.py`** remains a placeholder until the FastAPI app exists; API tests ship with that work.
+**API technical MVP — on `feature/api-mvp` (merge to `develop` pending):** `GET /health`, `POST /predict`, schemas, limits, 503/422 behavior, `test_api` coverage. See **`docs/branch-feature-api-mvp-vs-develop.md`**.
 
 1. ✅ Data pipeline (cleaning + normalization)
 2. ✅ ML classification (TF-IDF + Logistic Regression)
 3. ✅ Model training + artifacts saved (`python -m app.ml.train`)
 4. ✅ `predict_category` in `app/ml/predict_category.py` (category + score)
 5. ✅ Edge case handling in predict — empty / blank preprocessed text → `unknown` / `0.0` (`predict_category`); short text still goes through model
-6. ✅ Unit tests — utils, pipeline, `train`, `predict_category` (API tests pending with FastAPI)
-7. ⏳ FastAPI app + POST /predict + POST /health (Salim)
-8. ⏳ Request/response schemas + validation (Salim)
-9. ⏳ Database persistence — CONTACTS, TICKETS, MESSAGES (Salim)
-10. ⏳ End-to-end validation (input → predict → persist → response)
+6. ✅ Unit tests — utils, pipeline, `train`, `predict_category`
+7. ✅ On **`feature/api-mvp`:** FastAPI routes — `GET /health`, `POST /predict` + Pydantic schemas (still ⏳ on `develop` until merge)
+8. ✅ On **`feature/api-mvp`:** API tests in `tests/test_api.py` (with `httpx` / `TestClient`)
+9. ⏳ Database persistence — CONTACTS, TICKETS, MESSAGES
+10. ⏳ End-to-end validation (input → API → predict → **persist** → response)
 
 ### Post-MVP
 11. ⏳ WhatsApp integration
