@@ -73,6 +73,9 @@ Implemented on branch **`feature/api-mvp`** (see **`docs/branch-feature-api-mvp-
 
 ## Key Decisions
 
+**Data / persistence:**
+- **PostgreSQL** is the agreed relational database (technical MVP through final product; not SQLite as the long-term default).
+
 **ML:**
 - TF-IDF + Logistic Regression (baseline)
 - No deep learning for MVP

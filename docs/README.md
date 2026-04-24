@@ -10,6 +10,7 @@
 | `branch-feature-api-mvp-vs-develop.md` | What `feature/api-mvp` adds vs `develop` (merge checklist) |
 | `api-contracts.md` | `GET /health` + `POST /predict` contracts (technical MVP) |
 | `security-and-deployment.md` | MVP hardening, artifact safety, production run notes |
+| *Checklists* | **Technical / functional / final product MVP** — [README (Checklists section)](../README.md#smartticket-mvp-checklists) |
 | `architecture.md` | System structure; MVP modular monolith → two APIs (ingest / query) |
 | `diagrams/README.md` | Excalidraw: share link + optional `*.excalidraw` in repo (zoom in browser) |
 | `adr/` | Architecture decision records (start with `0001-…`) |
