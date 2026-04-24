@@ -1,5 +1,12 @@
-"""Pydantic models for API request/response bodies.
+from pydantic import BaseModel
 
-Must stay aligned with ``docs/api-contracts.md`` (e.g. ``text`` in, ``text`` /
-``category`` / ``score`` out). Add fields only when the contract is updated.
-"""
+
+class PredictRequest(BaseModel):
+    text: str
+
+
+class PredictResponse(BaseModel):
+    text: str
+    category: str
+    score: float
+

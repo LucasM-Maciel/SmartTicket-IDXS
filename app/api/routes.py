@@ -1,17 +1,13 @@
-"""HTTP route handlers (FastAPI).
-
-Implement:
-
-- ``POST /predict`` — body per ``docs/api-contracts.md``; call
-  ``predict_category`` from ``app.ml.predict_category``.
-- ``POST /health`` — readiness / model artifact checks.
-
-Handlers should validate with ``app.api.schemas`` and stay thin: persistence
-belongs in a service layer once the DB exists.
-"""
 from fastapi import APIRouter
+
+from app.api.schemas import PredictRequest, PredictResponse
+from app.ml.predict_category import predict_category
 
 router = APIRouter()
 
-# TODO(Salim): @router.post("/predict") ...
-# TODO(Salim): @router.post("/health") ...
+
+@router.post("/predict", response_model=PredictResponse)
+def predict(body: PredictRequest):
+    out = predict_category(body.text)
+
+    return PredictResponse(text=body.text, category=out["category"], score=out["score"])
