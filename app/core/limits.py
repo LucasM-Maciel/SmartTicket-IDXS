@@ -1,7 +1,8 @@
-"""HTTP/API bounds shared by Pydantic schemas and OpenAPI.
+"""Shared bounds for ticket text length (API and offline training).
 
-Training scripts read CSVs directly; they are not limited by these values
-unless you add the same check there intentionally.
+``MAX_TICKET_TEXT_CHARS`` is the single cap: ``POST /predict`` enforces it via
+Pydantic; ``train_model`` drops CSV rows whose raw text exceeds it so training
+and inference see the same upper bound.
 """
 
 from typing import Final

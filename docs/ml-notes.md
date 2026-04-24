@@ -96,7 +96,7 @@ To quiet the console: pass `zero_division` to `classification_report` in `app/ml
 * `clean_text` implemented in `app/utils/text_cleaning.py` (lowercase, strip, regex symbol removal, whitespace normalization)
 * `normalize_text` implemented in `app/utils/normalizer.py` (stopword removal via NLTK, configurable language, defaults to English)
 * `run_pipeline` implemented in `app/services/pipeline.py` (orchestrates `clean_text` → `normalize_text`)
-* `train_model` implemented in `app/ml/train.py` (TF-IDF + Logistic Regression, 75/25 split, artifacts saved via `joblib`): configurable CSV column names and output paths; rows with empty text after `run_pipeline` are dropped before splitting
+* `train_model` implemented in `app/ml/train.py` (TF-IDF + Logistic Regression, 75/25 split, artifacts saved via `joblib`): configurable CSV column names and output paths; rows with missing text/label are dropped; rows over `MAX_TICKET_TEXT_CHARS` are dropped; rows with empty text after `run_pipeline` are dropped before splitting
 * `predict_category` implemented in `app/ml/predict_category.py` (category + confidence); blank preprocessed text → `unknown` / `0.0` without loading artifacts; lazy thread-safe load/cache of model and vectorizer from `MODEL_PATH` / `VECTORIZER_PATH`
 * Column names for production CSV: `TEXT_COLUMN` / `LABEL_COLUMN` in `app/core/config.py`
 * Non-string inputs handled in both preprocessing functions: returns empty string to keep pipeline safe

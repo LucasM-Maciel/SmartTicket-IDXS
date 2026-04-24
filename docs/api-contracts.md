@@ -93,7 +93,7 @@ Optional later without changing the diagram’s core story: `GET /version` (debu
 
 - **Content-Type** for request bodies: `application/json` unless noted.
 - **Errors:** FastAPI default `{"detail": ...}` is fine until you add a shared error schema. For `POST /predict` artifact failures, `detail` is stable (see route notes above).
-- **Limits:** `app/core/limits.py` — e.g. max length of `text` on `POST /predict` (shared with the Pydantic schema).
+- **Limits:** `app/core/limits.py` — `MAX_TICKET_TEXT_CHARS` caps `text` on `POST /predict` (Pydantic) and excludes over-long rows in `train_model` so training matches the API bound.
 - **Paths (`app/core/config.py`):** defaults point at the repo layout (`artifacts/*.pkl`, dataset under `app/data/...`). Optional overrides — if set to a non-empty string, that path is used (`~` is expanded):
 
   | Variable | Role |

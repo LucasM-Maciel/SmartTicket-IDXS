@@ -8,6 +8,7 @@ import pandas as pd
 
 from app.services.pipeline import run_pipeline
 from app.core.config import DATASET_PATH, MODEL_PATH, VECTORIZER_PATH, TEXT_COLUMN, LABEL_COLUMN
+from app.core.limits import MAX_TICKET_TEXT_CHARS
 
 
 def train_model(
@@ -26,9 +27,15 @@ def train_model(
         labels: Name of the column containing ticket labels (categories).
         model_path: Where to write the trained model; defaults to MODEL_PATH from config.
         vectorizer_path: Where to write the fitted vectorizer; defaults to VECTORIZER_PATH from config.
+
+    Rows with missing text or label are dropped. Rows whose raw ``texts`` value
+    exceeds ``MAX_TICKET_TEXT_CHARS`` (``app.core.limits``) are dropped so the
+    same cap applies as on ``POST /predict``.
     """
 
     df = pd.read_csv(dataset)
+    df = df.dropna(subset=[texts, labels])
+    df = df.loc[df[texts].astype(str).str.len() <= MAX_TICKET_TEXT_CHARS]
     ticket_texts = df[texts]
     ticket_labels = df[labels]
 

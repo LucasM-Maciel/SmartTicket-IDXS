@@ -6,6 +6,8 @@ Operational decisions and follow-ups. For request JSON shapes, see `api-contract
 
 - **`POST /predict` body size:** `text` is limited to `MAX_TICKET_TEXT_CHARS` in `app/core/limits.py`, enforced by `PredictRequest` in `app/api/schemas.py`. Requests over the limit return **422** (validation error).
 
+- **Offline training:** `train_model` in `app/ml/train.py` drops CSV rows whose raw text column exceeds the same `MAX_TICKET_TEXT_CHARS`, keeping the training distribution aligned with what the API accepts.
+
 ## Documented for now (review before public or production)
 
 ### Model files (`joblib` / pickle)
@@ -44,8 +46,10 @@ FastAPI exposes `/docs` and `/redoc`. For a public API you may **disable** or **
 
 ## Single source of truth
 
-| Topic | Where |
-|--------|--------|
-| Max `text` length for HTTP | `app/core/limits.py` → `MAX_TICKET_TEXT_CHARS` |
-
+| Topic | Where |
+|--------|--------|
+| Max `text` length (HTTP + training row filter) | `app/core/limits.py` → `MAX_TICKET_TEXT_CHARS` |
+
+
+
 Tuning the limit: change the constant, run tests, and update `api-contracts.md` if the documented number is mentioned explicitly.
