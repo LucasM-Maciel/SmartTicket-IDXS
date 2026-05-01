@@ -9,6 +9,7 @@ def test_predict_category_empty_string():
     result = predict_category(text)
     assert result["category"] == "unknown"
     assert result["score"] == 0.0
+    assert "text_processed" in result
 
 
 def test_predict_category_valid_format(
