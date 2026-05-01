@@ -189,5 +189,21 @@
 - Keeping a short branch-delta doc avoids reviewers guessing what `develop` already had
 
 ### Next Steps
-- Merge `feature/api-mvp` → `develop` when approved; then collapse “on branch” wording in `project-context` / `ml-notes` to “in `develop`”
-- DB + persistence + Salim track
+- Merge feature branches → `develop` when approved; refresh docs that mention stub routes vs merged code paths.
+
+---
+
+## 2026-04-24 (Lucas)
+
+### What was done
+- **`feature/database` / persistence slice documented:** `app/db/` (SQLAlchemy `Ticket`, `get_db` + **`DATABASE_URL`**, `save_ticket_prediction`), **`classify_ticket`** facade, **`POST /predict`** requiring persistence (**503** if unset/failing commit).
+- Docs synced: **`README.md`** (Data/API sections, setup step DB + `.env.example`, roadmap checkboxes), **`docs/architecture.md`** (persistence layer, `tickets` schema vs planned tables, critical path), **`docs/project-context.md`** (development order items 9–10), **`docs/branch-feature-api-mvp-vs-develop.md`** (persistence + deps rows), **`docs/security-and-deployment.md`** (**DATABASE_URL** notes), **`docs/api-contracts.md`** / **`docs/ml-notes.md`** / **`docs/test-plan.md`** nits.
+- Added repo-root **`.env.example`** for onboarding.
+
+### Problems
+- `POST /predict` runs inference before failing when **`DATABASE_URL`** is missing — documented behavior (potential refactor later).
+
+### Next Steps
+- **Alembic** migrations + expanded entities (**contacts**, **messages**, urgency); read/query APIs; optionally reorder guardrails so inference skips when DB is absent.
+
+

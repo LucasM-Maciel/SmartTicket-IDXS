@@ -40,9 +40,10 @@ def predict_category(text: str) -> dict:
         text: Raw ticket text.
 
     Returns:
-        Dict with ``category`` (str) and ``score`` (float, typically 0.0–1.0).
-        If preprocessing yields only whitespace, returns
-        ``{"category": "unknown", "score": 0.0}`` without loading artifacts.
+        Dict with ``category`` (str), ``score`` (float, typically 0.0–1.0), and
+        ``text_processed`` (str from ``run_pipeline``).
+        If preprocessing yields only whitespace, returns ``unknown`` / ``0.0`` and
+        still includes ``text_processed``, without loading artifacts.
 
     Raises:
         FileNotFoundError: If ``MODEL_PATH`` or ``VECTORIZER_PATH`` files are missing
@@ -51,10 +52,14 @@ def predict_category(text: str) -> dict:
     processed_text = run_pipeline(text)
 
     if processed_text.strip() == "":
-        return {"category": "unknown", "score": 0.0}
+        return {"category": "unknown", "score": 0.0, "text_processed": processed_text}
 
     model, vectorizer = _load_artifacts()
     vector = vectorizer.transform([processed_text])
     categories = model.predict(vector)
     scores = model.predict_proba(vector)
-    return {"category": str(categories[0]), "score": float(scores[0].max())}
+    return {
+        "category": str(categories[0]),
+        "score": float(scores[0].max()),
+        "text_processed": processed_text,
+    }

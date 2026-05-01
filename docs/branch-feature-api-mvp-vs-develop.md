@@ -1,37 +1,27 @@
 # `feature/api-mvp` vs `develop`
 
-This page summarizes what the branch **`feature/api-mvp`** adds on top of **`develop`**, to help code review and merge planning. It was last updated when aligning docs with that delta.
+Summarizes what **`feature/api-mvp`** introduced relative to an older **`develop`** baseline (stub routes), plus **follow-on persistence work** that may land on **`feature/database`** or merged branches — use git history for the exact delta after merges.
 
-**Authorship:** The MVP code and documentation described here (including the FastAPI layer) is **Lucas only** — not Salim or other teammates; see `docs/team-responsibilities.md` (note at top) and `docs/project-context.md` (ownership section).
+**Authorship:** MVP FastAPI + persistence wiring described here is **Lucas** — see `docs/team-responsibilities.md` and `docs/project-context.md`.
 
 ## Summary
 
-| Area | `develop` | `feature/api-mvp` |
-|------|-----------|-------------------|
-| **HTTP API** | `app/main.py` mounts a router, but `app/api/routes.py` is a **stub** (TODOs only). | **`GET /health`** and **`POST /predict`** are implemented; handlers call `predict_category`. |
-| **Schemas** | `app/api/schemas.py` is almost empty (module docstring only). | **`PredictRequest`**, **`PredictResponse`**, **`HealthResponse`** with Pydantic; `text` has **`max_length`** from `app.core.limits`. |
-| **Limits** | No shared constant file. | **`app/core/limits.py`**: `MAX_TICKET_TEXT_CHARS` (50_000) drives API validation and training row filtering. |
-| **Training** | No `dropna`; no max-length filter on raw CSV text before the pipeline. | **Drops** rows with missing text/label; **drops** rows where raw `texts` string length `> MAX_TICKET_TEXT_CHARS` (aligned with `POST /predict`). |
-| **Config** | Paths from repo root defaults. | Same defaults plus **optional env overrides**: `SMARTTICKET_MODEL_PATH`, `SMARTTICKET_VECTORIZER_PATH`, `SMARTTICKET_DATASET_PATH`. |
-| **Errors** | N/A (no routes). | **`POST /predict`**: **422** if body invalid or `text` too long; **503** if `predict_category` hits missing artifacts (message points to `GET /health`). **`GET /health`**: **200** `ready` or **503** `not_ready` (minimal JSON, no path leakage). |
-| **Docs: contracts** | Short `api-contracts.md` (mainly `POST /predict` example). | **Expanded** `docs/api-contracts.md`: technical MVP table, `GET /health`, status codes, env vars, appendix for future product routes. |
-| **Security / ops** | — | New **`docs/security-and-deployment.md`**: text length, pickle trust, no auth in MVP, production `uvicorn` notes, CORS/OpenAPI, PII in responses. |
-| **Tests** | `tests/test_api.py` not exercising real routes (or missing). | **`TestClient` tests** for `/health` shape, `/predict` success (mocked ML), 422, over-max-length, 503 on missing artifacts. |
-| **Dependencies** | (baseline `requirements.txt`) | **Removed unused `black`** from requirements in this workstream. |
+| Area | Older `develop` | Current MVP stack (`feature/api-mvp` + persistence) |
+|------|-----------------|------------------------------------------------------|
+| **HTTP API** | `app/api/routes.py` stub (TODOs). | **`GET /health`**, **`POST /predict`**; handlers call **`classify_ticket`** → `predict_category`. |
+| **Schemas** | Near-empty `schemas.py`. | **`PredictRequest`**, **`PredictResponse`**, **`HealthResponse`**; `max_length` from **`app/core/limits.py`**. |
+| **Limits** | No shared constant. | **`MAX_TICKET_TEXT_CHARS`** — API validation + **`train_model`** row filter. |
+| **Config** | Root-relative defaults only. | **`SMARTTICKET_*`** env overrides for model / vectorizer / dataset paths (`app/core/config.py`). |
+| **Persistence** | None. | **`DATABASE_URL`** → SQLAlchemy; **`tickets`** table (`app/db/models.py`); **`save_ticket_prediction`**; **`POST /predict`** returns **503** if DB unavailable/unconfigured or write fails. |
+| **Services** | Direct ML imports from routes (historically). | **`app/services/classifier.py`** — `ClassificationResult` + **`classify_ticket`**. |
+| **Dependencies** | Baseline `requirements.txt`. | **`sqlalchemy`**, **`psycopg2-binary`**; **`openai`**, **`langchain`** present — **`app/services/llm_service.py`** is a stub only. |
+| **Tests** | No/little route coverage. | **`tests/test_api.py`** (`TestClient`, mocked classifier); **`tests/test_persistence.py`** (repository + DB overrides + rollback); **`conftest.py`** clears **`DATABASE_URL`** during pytest. |
+| **Docs** | Minimal contracts. | **`docs/api-contracts.md`**, **`docs/security-and-deployment.md`**, this file; **`README`** setup includes DB + **`.env.example`**. |
 
-## What is still *not* in this branch (vs full product MVP)
+## Still *not* in scope (vs full product MVP)
 
-Merging `feature/api-mvp` into `develop` **does not** complete the end-to-end product MVP. Still outstanding, among other things:
+- **Contacts**, **messages**, urgency columns, **GET/list ticket** APIs, auth, rate limits, webhooks/WhatsApp, agent UI, **LLM** in response path, **RabbitMQ** / priority workers, **Alembic** migrations.
 
-- **Database persistence** after prediction (tickets, contacts, messages) and schemas tied to the DB.
-- **Authentication, rate limiting, CORS** for a public or browser-facing API (see `docs/security-and-deployment.md` — noted as follow-ups).
-- **WhatsApp / webhooks**, **agent UI**, **LLM** flows, **priority queue** as in `docs/product-vision-*.md`.
-- **Operational retrain script** (e.g. `scripts/retrain.py`) and automated feedback-driven retraining.
-- **Hardening** of `/docs` and `/redoc` if the API is exposed untrusted.
+## After merges
 
-## After merge
-
-When `feature/api-mvp` is merged into `develop`:
-
-- Update this document’s “Summary” if needed, or replace with a short line: *“Content absorbed into `develop`; see `api-contracts.md` and `project-context.md` for current status.”*
-- Re-check **`docs/project-context.md`** “Development order” and **`README.md`** “Features / Roadmap” so they match the default branch.
+When deltas are absorbed into **`develop`**, shorten this file to a pointer (`README`, `project-context`, `architecture.md`) or refresh the table against **`git diff develop...HEAD`**.

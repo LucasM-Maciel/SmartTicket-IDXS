@@ -1,16 +1,17 @@
 # System Architecture
 
-> Last updated: 2026-04-12
+> Last updated: 2026-04-24
 
 ## Overview
 
 The system follows a layered architecture:
 
-- **API layer** — HTTP requests, validation, persistence orchestration
-- **Service layer** — pipeline orchestration (`run_pipeline`)
+- **API layer** — HTTP requests, validation, classification orchestration, **DB writes on `POST /predict`** when configured
+- **Service layer** — `classify_ticket` (typed facade over ML), `run_pipeline`
 - **ML layer** — training (`train_model`) and inference (`predict_category`)
+- **Persistence layer** — SQLAlchemy models and repositories (`app/db/`)
 - **Utils layer** — text cleaning and normalization
-- **Data layer** — datasets, relational DB (tenancy pattern TBD), model artifacts
+- **Data layer** — datasets (CSV), relational DB (PostgreSQL), model artifacts (`.pkl`)
 
 ---
 
@@ -64,7 +65,20 @@ Use this section as **shared context** when implementing or extending diagrams. 
 
 Both modes still show **one deployable API** (modular monolith). Optional **sub-boxes or notes** inside the API (“ingestion vs query modules”) clarify future split **without** drawing two separate APIs until the team follows [`docs/adr/0001-mvp-modular-monolith-and-evolution-to-two-apis.md`](adr/0001-mvp-modular-monolith-and-evolution-to-two-apis.md).
 
-### Legend (recommended on diagrams)
+### Critical path (`POST /predict` — as implemented)
+
+```text
+HTTP POST /predict
+→ Pydantic validation (PredictRequest)
+→ classify_ticket(text) → predict_category → category + score + text_processed
+→ save_ticket_prediction(...) → INSERT INTO tickets
+→ commit
+→ PredictResponse JSON
+```
+
+**Dependency injection:** `get_db()` yields a SQLAlchemy `Session` when **`DATABASE_URL`** is set; otherwise **`None`**. After **`classify_ticket`** completes, if there is no session the handler returns **503** (`Database persistence not configured.`) — so inference runs even when persistence is off (consider reordering in a future refactor if you want to skip model load). Tests override `get_db` or use SQLite (`tests/test_persistence.py`). Root **`conftest.py`** clears `DATABASE_URL` during pytest so local `.env` never leaks into CI-style runs.
+
+---
 
 - **Solid boxes** — services **you** deploy and operate (FastAPI app, UI host, etc.).
 - **Dashed boxes** — **external** providers (BSP / WhatsApp Cloud, LLM vendor) **or** a **thin internal HTTP client** (“API LLM” adapter) that only talks outbound; label the legend so readers are not confused by adapters sitting *inside* the environment boundary.
@@ -150,18 +164,18 @@ Customer sends message on WhatsApp
 → Everything stored in database → analytics + retraining
 ```
 
-### Technical pipeline (reference)
+### Technical pipeline (reference — current code)
 
 ```text
-User / channel
+Client
 → API (FastAPI)
 → Validation
-→ Pipeline (clean → normalize → vectorize in inference)
-→ ML model (category + score)
-→ (Future) LLM response
-→ Save to database
-→ Return response
+→ classify_ticket → predict_category (pipeline: clean → normalize → vectorize)
+→ save_ticket_prediction → PostgreSQL (tickets)
+→ JSON response (text echo + category + score)
 ```
+
+*(LLM step remains future — see `app/services/llm_service.py` stub.)*
 
 ---
 
@@ -181,19 +195,38 @@ Dataset
 ## Folder responsibilities
 
 - `app/api` — routes and HTTP handling
-- `app/services` — pipeline and future non-ML services
+- `app/services` — `classify_ticket`, `run_pipeline`, future orchestration (`llm_service` stub)
 - `app/ml` — training and prediction
+- `app/db` — SQLAlchemy models (`Ticket`), session factory (`DATABASE_URL`), repository writes
 - `app/utils` — reusable text functions
 - `app/data` — datasets (not production DB)
-- `app/core` — configuration (paths, columns); app-wide settings may split to `settings` for env-based deployment config
-- `scripts/` — thin CLI wrappers (e.g. pytest from repo root); must call logic in `app/`, not duplicate it
+- `app/core` — configuration (paths, columns, limits); env-driven deployment keys documented in `api-contracts.md` / `.env.example`
+- `scripts/` — thin CLI wrappers (e.g. pytest from repo root, `post_test_ticket.py`); must call logic in `app/`, not duplicate it
 
 ---
 
-## Database structure (planned)
+## Database structure
+
+### Implemented (`tickets`)
+
+| Column | Notes |
+|--------|--------|
+| `id` | UUID PK |
+| `text_raw` | Request body `text` |
+| `text_processed` | Output of preprocessing before vectorization |
+| `category` | Predicted label |
+| `score` | Model confidence |
+| `status` | Default `classified` |
+| `created_at` | Server default timestamp (timezone-aware) |
+
+Schema creation today: **`Base.metadata.create_all`** (see README setup); **Alembic migrations** are not wired yet.
+
+### Planned (product MVP — not implemented)
+
+Align with longer-term vision:
 
 - **CONTACTS** — whatsapp_number, name, is_customer, became_customer_at
-- **TICKETS** — text, text_processed, category, score, priority, priority_score, status, assigned_to, resolved_by
+- **TICKETS** (extended) — priority, priority_score, assigned_to, resolved_by (beyond current columns)
 - **MESSAGES** — ticket_id, direction (inbound/outbound), sent_by (llm/human/system)
 - **FEEDBACK** — ticket_id, correct_category, was_classification_correct, agent_id
 - **CONVERSIONS** — contact_id, ticket_id, converted_at
@@ -206,8 +239,9 @@ Dataset
 |-----------|------------|
 | Backend / API | Python + FastAPI |
 | ML | Scikit-learn (TF-IDF + Logistic Regression) |
-| LLM | OpenAI API *(planned)* |
-| Database | PostgreSQL — Supabase (MVP), Railway/RDS (production) |
+| Persistence | SQLAlchemy + PostgreSQL (`DATABASE_URL`) |
+| LLM | OpenAI / LangChain deps installed; **`app/services/llm_service.py`** stub — not wired to routes |
+| Database hosting | Supabase (MVP), Railway/RDS (production) *(examples)* |
 | WhatsApp | Z-API (Brazil) or Twilio *(planned)* |
 | Real-time | WebSockets via FastAPI — polling for demo |
 | Agent interface | Streamlit (demo) → React / Next.js (production) |

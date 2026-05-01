@@ -7,6 +7,17 @@ import pytest
 _TESTS_DIR = Path(__file__).resolve().parent / "tests"
 
 
+@pytest.fixture(autouse=True)
+def _isolate_database_url_for_tests(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Avoid hitting real Postgres when developers have ``DATABASE_URL`` in ``.env``."""
+    monkeypatch.delenv("DATABASE_URL", raising=False)
+    from app.db import session as db_session
+
+    db_session.reset_db_engine_state()
+    yield
+    db_session.reset_db_engine_state()
+
+
 class TrainArtifactPaths(NamedTuple):
     model_path: Path
     vectorizer_path: Path

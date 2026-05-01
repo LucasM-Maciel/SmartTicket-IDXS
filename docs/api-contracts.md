@@ -1,6 +1,6 @@
 # API contracts (SmartTicket-IDXS)
 
-> **Branch note:** For what is implemented on `feature/api-mvp` vs the current `develop` baseline, see **`branch-feature-api-mvp-vs-develop.md`**.
+> **Branch note:** Use **`branch-feature-api-mvp-vs-develop.md`** + **`git diff`** for lineage — stack includes **`DATABASE_URL`** persistence (`POST /predict` writes **`tickets`**).
 
 > This file describes **HTTP JSON** contracts. The **primary scope** below is the **technical MVP** (synthetic tickets → API → ML → persist/queue *as a design target*). Broader product routes (WhatsApp, attendant CRUD) live in the appendix.
 
@@ -14,8 +14,8 @@ Matches the **“Technical SmartTicket MVP”** diagram: a **modular FastAPI** o
 |-------------|----------------------------------|
 | **Test dataset** (“Synthetic tickets”) | Not a separate *route*: a **client** (script, `curl`, `httpx`, tests) sends `{"text": "…"}` to the API. Same idea as “synthetic tickets in”. |
 | **API SmartTicket (modular)** | `FastAPI` + `app/api/routes.py` (+ future services). |
-| **Pre-processing pipeline** + **Prediction model** | `run_pipeline` + `predict_category` inside `POST /predict` (and `GET /health` for artifact *files* only). |
-| **DB** (“Persist ticket + classification + score”) | **Planned in code** as DB layer — **not** part of the minimal HTTP surface until you add persistence. |
+| **Pre-processing pipeline** + **Prediction model** | `run_pipeline` inside **`classify_ticket`** → `predict_category`; **`GET /health`** probes artifact *files* only. |
+| **DB** (“Persist ticket + classification + score”) | **Implemented:** `POST /predict` writes **`tickets`** when `DATABASE_URL` is set (SQLAlchemy; **PostgreSQL** in deployments). **Tests** inject SQLite sessions — not implied production behavior. Returns **503** if persistence is not configured or the write fails. |
 | **Priority queue** (urgency / “prioritized by …”) | **Planned** as **logical** queue (e.g. Postgres + scheduler), **not** a separate public REST resource in the first technical slice. |
 
 **HTTP surface for the technical MVP (keep small):**
@@ -27,7 +27,7 @@ Matches the **“Technical SmartTicket MVP”** diagram: a **modular FastAPI** o
 
 Optional later without changing the diagram’s core story: `GET /version` (debug only).
 
-**Status codes you care about first:** **200** on success, **422** on invalid body (including `text` over the max length), **503** when not ready to infer (missing artifacts) — see each route below.
+**Status codes you care about first:** **200** on success, **422** on invalid body (including `text` over the max length), **503** when not ready to infer (missing artifacts), when the database is not configured for persistence, or when a DB write fails — see each route below.
 
 ---
 
@@ -57,7 +57,7 @@ Optional later without changing the diagram’s core story: `GET /version` (debu
 
 ## `POST /predict` (technical MVP)
 
-**Purpose:** Run the ML pipeline and classifier on a **single** string — the stand-in for a **synthetic** ticket line from the diagram. **No** DB write in the baseline contract (persistence is a follow-up feature).
+**Purpose:** Run the ML pipeline and classifier on a **single** string — the stand-in for a **synthetic** ticket line from the diagram. After a successful prediction, the API **persists** raw text, processed text, category, and score when `DATABASE_URL` is configured (otherwise **503**).
 
 ### Request
 
@@ -83,11 +83,9 @@ Optional later without changing the diagram’s core story: `GET /version` (debu
 ### Notes
 
 - After preprocessing, if the text is empty or only whitespace, the implementation returns `category: "unknown"`, `score: 0.0` without loading model artifacts (this covers `{"text": ""}` and bodies like `{"text": "   "}`).
-- If model artifacts are missing when inference runs, the API responds with **503** and FastAPI’s default error body, with `detail` exactly:
-
-  `Model artifacts missing; check GET /health`
-
-  (consistent with `GET /health` returning `not_ready` when files are absent.)
+- If model artifacts are missing when inference runs, the API responds with **503** with `detail` exactly: `Model artifacts missing; check GET /health` (consistent with `GET /health` returning `not_ready` when files are absent).
+- If `DATABASE_URL` is unset, **503** with `detail`: `Database persistence not configured.`
+- If the DB transaction fails, **503** with `detail`: `Could not persist ticket; database unavailable.`
 
 ---
 
@@ -100,6 +98,7 @@ Optional later without changing the diagram’s core story: `GET /version` (debu
 
   | Variable | Role |
   |----------|------|
+  | `DATABASE_URL` | PostgreSQL URL for SQLAlchemy (**required** at runtime for successful `POST /predict`; see `.env.example`) |
   | `SMARTTICKET_MODEL_PATH` | Trained model `.pkl` |
   | `SMARTTICKET_VECTORIZER_PATH` | Vectorizer `.pkl` |
   | `SMARTTICKET_DATASET_PATH` | Training CSV (training script / notebooks) |

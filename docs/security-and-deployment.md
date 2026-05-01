@@ -4,6 +4,10 @@ Operational decisions and follow-ups. For request JSON shapes, see `api-contract
 
 ## Done in code (MVP)
 
+- **`DATABASE_URL`:** SQLAlchemy reads this env var at runtime (`app/db/session.py`). Local/dev uses **`.env`** (loaded by `python-dotenv` in `app.main`). **Never commit** secrets — see repo **`.env.example`** for variable names only.
+
+- **`POST /predict` persistence:** successful responses require a working DB session (configured URL + reachable server + schema). Missing URL → **503** `Database persistence not configured.` Failed transaction → **503** `Could not persist ticket; database unavailable.` Prefer **TLS** (`sslmode=require` in URL or proxy) for hosted Postgres.
+
 - **`POST /predict` body size:** `text` is limited to `MAX_TICKET_TEXT_CHARS` in `app/core/limits.py`, enforced by `PredictRequest` in `app/api/schemas.py`. Requests over the limit return **422** (validation error).
 
 - **Offline training:** `train_model` in `app/ml/train.py` drops CSV rows whose raw text column exceeds the same `MAX_TICKET_TEXT_CHARS`, keeping the training distribution aligned with what the API accepts.
@@ -49,6 +53,7 @@ FastAPI exposes `/docs` and `/redoc`. For a public API you may **disable** or **
 | Topic | Where |
 |--------|--------|
 | Max `text` length (HTTP + training row filter) | `app/core/limits.py` → `MAX_TICKET_TEXT_CHARS` |
+| Database URL (never commit real credentials) | Env **`DATABASE_URL`** · template **`/.env.example`** |
 
 
 

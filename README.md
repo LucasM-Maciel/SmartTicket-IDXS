@@ -146,26 +146,29 @@ User message
 - Built with **FastAPI**
 - RESTful architecture (initial version simplified)
 
-**Current endpoint:**
+**Current endpoints:**
 
 ```http
+GET /health
 POST /predict
 ```
 
 Handles:
 
 - Input validation
-- Model inference
+- Classification via `app/services/classifier.classify_ticket` (wraps `predict_category`)
+- **Persistence:** inserts one **`tickets`** row (`text_raw`, `text_processed`, `category`, `score`, …) when `DATABASE_URL` is set — otherwise **`POST /predict`** returns **503** (`Database persistence not configured.`)
 - Response formatting
 
 ---
 
-### 🗃️ Data Layer *(Planned)*
+### 🗃️ Data Layer *(partial — MVP persistence)*
 
-- PostgreSQL (production)
-- SQLite (development)
+- **PostgreSQL** in deployments via **`DATABASE_URL`** (SQLAlchemy + `psycopg2-binary`; see `app/db/session.py`, `app/db/models.py`)
+- **`tickets` table:** UUID PK, raw/processed text, category, score, status (`classified`), `created_at`
+- **Tests:** SQLite file DB via dependency overrides (`tests/test_persistence.py`) — no impact from a developer’s local `.env` thanks to `conftest.py` clearing `DATABASE_URL`
 
-The system is designed to persist structured interaction data for **analytics and continuous improvement**.
+Contacts/messages schema and read/query APIs remain **planned** (see `docs/architecture.md`).
 
 ---
 
@@ -233,6 +236,8 @@ The system evolves through a continuous learning cycle:
 | Real-time | WebSockets via FastAPI — polling for demo |
 | Agent Interface | Streamlit (demo) → React / Next.js (production) |
 | Scheduled Jobs | APScheduler *(planned)* |
+| ORM / DB driver | SQLAlchemy · psycopg2-binary |
+| LLM libraries *(deps present; integration stub)* | openai · langchain (`app/services/llm_service.py` placeholder) |
 | Version Control | Git & GitHub |
 
 ---
@@ -273,17 +278,17 @@ The `text` field is capped for API safety; see `app/core/limits.py` and `docs/ap
 - 🌐 Multilingual pipeline support (`language` parameter, English default)
 - 🧪 Pytest coverage for preprocessing, normalizer, pipeline, training, and `predict_category` (`tests/` — strategy in `docs/test-plan.md`, tips in `tests/best_practices.md`)
 - Test runners `scripts/retest.ps1` / `scripts/retest.bat` — invoke pytest from repo root (see `scripts/retest.md`)
-- **MVP slice (2026-04-11):** pure pipeline + training + `predict_category` is complete. **Out of scope for that slice:** persisting tickets or predictions to a database after inference.
-- **API technical MVP (branch `feature/api-mvp`):** `GET /health`, `POST /predict`, Pydantic limits, tests in `tests/test_api.py` — see `docs/branch-feature-api-mvp-vs-develop.md` (merges into `develop` when the PR lands)
+- **MVP slice (2026-04-11):** pipeline + training + `predict_category` is complete (DB persistence was out of scope for that slice only).
+- **API + persistence:** `GET /health`, `POST /predict`, Pydantic limits; ticket row written when `DATABASE_URL` is set (`app/db/`, `tests/test_api.py`, `tests/test_persistence.py`) — see `docs/api-contracts.md` and `docs/branch-feature-api-mvp-vs-develop.md`
 
 ---
 
 ### 🚧 In Progress
 
-- Merge API MVP branch to `develop` (see `docs/branch-feature-api-mvp-vs-develop.md`)
+- Merge ongoing feature branches to `develop` as PRs are approved (see `docs/branch-feature-api-mvp-vs-develop.md` when comparing historical deltas)
 - Real-world dataset sourcing (current dataset is synthetic)
 - Model evaluation with reliable data
-- Database persistence and full end-to-end flows (post-prediction)
+- Contacts/messages schema, urgency field, priority queue, channels/UI (beyond classify + persist one row)
 
 ---
 
@@ -292,7 +297,6 @@ The `text` field is capped for API safety; see `app/core/limits.py` and `docs/ap
 - Operational retrain entry point (e.g. `scripts/retrain.py`) when the feedback-loop / scheduling milestone lands
 - 🤖 LLM automatic resolution (with structured ML context)
 - ⚠️ Dynamic priority + priority aging queue
-- 🗃️ Database integration (PostgreSQL)
 - 📱 WhatsApp Business API integration (Z-API / Twilio)
 - 🖥️ Agent interface (Streamlit demo → React production)
 - 🔁 Feedback loop + automatic model retraining (may include scheduled retrain jobs)
@@ -325,14 +329,14 @@ Planned metrics:
 
 | Done | Deliverable | Notes |
 |:-----:|--------------|--------|
-| ✅ | **PostgreSQL** as the target RDBMS | Architecture decision; wiring in code in progress |
+| ✅ | **PostgreSQL** as the target RDBMS | `DATABASE_URL` + SQLAlchemy; table `tickets` (see `app/db/models.py`) |
 | ✅ | **Test dataset** (synthetic tickets / sample) | CSV + test requests with body `{"text": "…"}` on `POST /predict` |
 | ✅ | Modular **SmartTicket API** (FastAPI) | `GET /health`, `POST /predict` — see `docs/api-contracts.md` |
 | ✅ | **Preprocessing** (pipeline) | `clean_text` → `normalize_text` → `run_pipeline` |
 | ✅ | **Prediction model** — classification + *score* | `predict_category`, TF-IDF + logistic regression; `joblib` artifacts |
 | ⬜ | **Urgency** in the API flow → persist with classification + *score* | Not yet exposed/derived beyond class + *score* in the minimal contract |
 | ⬜ | **Priority queue** (ordered by urgency) | Diagram: *Priority queue*; not implemented in the current API |
-| ⬜ | **PostgreSQL** — persist *ticket* + classification + *score* | Next phase: schema + write after `POST /predict` |
+| ✅ | **PostgreSQL** — persist *ticket* + classification + *score* | `POST /predict` persists when `DATABASE_URL` is set (`save_ticket_prediction`); **503** if unset or write fails |
 | ✅ | Limits, tests, security and contract docs | `app.core.limits`, `tests/test_api.py`, `docs/security-and-deployment.md` |
 
 **Task list (for Git/PRs; mirrors the table):**
@@ -343,7 +347,7 @@ Planned metrics:
 - [x] Model: category + *confidence score*
 - [ ] Urgency wired into the persistence path (as in the diagram)
 - [ ] Priority queue (*priority queue* by urgency)
-- [ ] PostgreSQL: persist ticket + classification + *score*
+- [x] PostgreSQL: persist ticket + classification + *score* (requires `DATABASE_URL` + schema)
 - [x] `MAX_TICKET_TEXT_CHARS` aligned train ↔ API; API tests; documentation
 
 ### 2) Functional MVP (*Smart Ticket Architecture / Functional MVP*)
@@ -357,7 +361,7 @@ As in the diagrams: **Ticket owner** (WhatsApp) → **WhatsApp API (BSP)** / **w
 | ⬜ | **Prediction model** — pipeline; output with **classification + *score* + urgency** (and in diagram variants, *entity extraction* / *degree to match*) | Today: category + *score*; urgency/entity not in the full path yet |
 | ⬜ | **LLM provider** (OpenAI / Anthropic, etc.) — *Raw ticket* + *score* / classification (context) → **LLM response** | ML+LLM hybrid planned; not integrated in code |
 | ⬜ | **Queue & scheduling** — *Postgres* + **APScheduler** (or multi-queue logic) — *prioritized by urgency score* | Diagram: queue; not implemented |
-| ⬜ | **DB** — *read*; *write* ticket + classification + (urgency / queue) + agent reply; variant: persist “raw + model output” | Schema/persistence in progress |
+| ⬜ | **DB** — *read*; *write* ticket + classification + (urgency / queue) + agent reply; variant: persist “raw + model output” | **Write path** for classify + score exists (`tickets`); list/UI reads and urgency not implemented yet |
 | ⬜ | **UI** — *SmartTicket Interface Beta*; **agent**; *data consuming* from Ingestion | Not in the repo |
 | ⬜ | **User response** — *LLM* or agent (and *status* / *feedback* to the ticket owner) | Out of scope for the current MVP |
 
@@ -467,13 +471,27 @@ See `scripts/retest.md` for details.
 
 ---
 
-### 6. Run API
+### 6. Configure database *(required for successful `POST /predict`)*
+
+Set **`DATABASE_URL`** for the API process (see `.env.example`). Create the **`tickets`** table before calling predict — from repo root, with SQLAlchemy metadata:
+
+```bash
+python -c "from app.db.models import Base; from app.db.session import get_engine; e=get_engine(); Base.metadata.create_all(bind=e) if e else print('Set DATABASE_URL')"
+```
+
+*(Production migrations may later move to Alembic — not in repo yet.)*
+
+---
+
+### 7. Run API
 
 ```bash
 uvicorn app.main:app --reload
 ```
 
-Endpoints: `GET /health` (readiness), `POST /predict` (JSON `{"text":"…"}`). Details: `docs/api-contracts.md`.
+Endpoints: `GET /health` (artifact readiness), `POST /predict` (JSON `{"text":"…"}` — **503** if DB not configured or write fails). Details: `docs/api-contracts.md`.
+
+**Manual smoke:** `python scripts/post_test_ticket.py` (needs running server + `DATABASE_URL`).
 
 ---
 
@@ -482,8 +500,9 @@ Endpoints: `GET /health` (readiness), `POST /predict` (JSON `{"text":"…"}`). D
 ### 🔹 MVP
 
 - [x] Preprocessing pipeline
-- [x] ML classification model (train + `predict_category`; no DB write after prediction yet)
-- [x] API surface (`GET /health`, `POST /predict`) — on `feature/api-mvp` until merged to `develop`
+- [x] ML classification model (train + `predict_category`)
+- [x] API surface (`GET /health`, `POST /predict`)
+- [x] Persist predictions to **`tickets`** when `DATABASE_URL` is set (`app/db/*`, `tests/test_persistence.py`)
 
 ---
 
@@ -491,14 +510,14 @@ Endpoints: `GET /health` (readiness), `POST /predict` (JSON `{"text":"…"}`). D
 
 - [ ] API versioning
 - [ ] Model improvements
-- [ ] Modular architecture
+- [ ] Modular architecture (routers per ingestion vs query — see ADR `docs/adr/0001-…`)
+- [ ] Schema expansions: contacts, messages, urgency; read/query endpoints
 
 ---
 
 ### 🔹 Future
 
-- [ ] LLM integration
-- [ ] Database layer
+- [ ] LLM integration *(stub module present; not wired to routes)*
 - [ ] Monitoring & observability
 - [ ] Multi-tenant system
 - [ ] Cloud deployment
@@ -521,7 +540,7 @@ Endpoints: `GET /health` (readiness), `POST /predict` (JSON `{"text":"…"}`). D
 - Product vision (EN / PT) → `docs/product-vision-en.md`, `docs/product-vision-pt.md`
 - Branch delta (`feature/api-mvp` vs `develop`) → `docs/branch-feature-api-mvp-vs-develop.md`
 - Team Responsibilities → `docs/team-responsibilities.md`
-- License → `LICENSE`
+- Environment template → `.env.example` (never commit `.env`)
 
 ---
 
