@@ -7,8 +7,8 @@
 | Document | Purpose |
 |----------|---------|
 | `project-context.md` | MVP scope, dev order, future technical planning |
-| `branch-feature-api-mvp-vs-develop.md` | What `feature/api-mvp` adds vs `develop` (merge checklist) |
-| `api-contracts.md` | `GET /health` + `POST /predict` contracts (technical MVP) |
+| `branch-feature-api-mvp-vs-develop.md` | API MVP + persistence delta vs older `develop` (historical merge aid) |
+| `api-contracts.md` | `GET /health` + `POST /predict` + env vars (`DATABASE_URL`, artifacts) |
 | `security-and-deployment.md` | MVP hardening, artifact safety, production run notes |
 | *Checklists* | **Technical / functional / final product MVP** — [README (Checklists section)](../README.md#smartticket-mvp-checklists) |
 | `architecture.md` | System structure; MVP modular monolith → two APIs (ingest / query) |
@@ -25,6 +25,8 @@
 ## Testing & scripts
 
 - Run tests: `scripts/retest.ps1` / `scripts/retest.bat` — details in `scripts/retest.md`
+- Manual DB persistence smoke (running API): `scripts/post_test_ticket.py`
+- Environment template (repo root): `/.env.example` — copy to `.env`, never commit secrets
 - Test tips: `tests/best_practices.md`
 - Script conventions: `scripts/best_practices.md`
 

@@ -27,7 +27,7 @@ The system should be tested in layers:
 2. **ML layer** → prediction behavior and model outputs
 3. **Service layer** → end-to-end pipeline logic
 4. **API layer** → request/response validation
-5. **Future integrations** → LLM, database, WhatsApp webhooks
+5. **Future integrations** → LLM, WhatsApp webhooks *(DB persistence tests live in `test_persistence.py`)*
 
 ---
 
@@ -707,33 +707,50 @@ Ensure optional behavior can be controlled.
 
 ---
 
-# 8. Future Database Tests (`test_database.py`)
+# 8. Database persistence tests (`test_persistence.py`)
 
-## 8.1 Prediction record can be stored
+Shipped as **P1/P0 hybrid**: validates repository writes and route integration without requiring Postgres on developer laptops during pytest.
 
-**Priority:** P2
+## 8.1 Repository persists ticket prediction row
 
-### Objective
-
-Ensure prediction results can be persisted.
-
-### Validate
-
-* text, category, and score are saved successfully
-
----
-
-## 8.2 Stored prediction preserves expected fields
-
-**Priority:** P2
+**Priority:** P0 for persistence correctness
 
 ### Objective
 
-Ensure database record matches expected schema.
+Ensure **`save_ticket_prediction`** inserts **`Ticket`** rows with expected fields.
 
 ### Validate
 
-* stored values are complete and consistent
+- `text_raw`, `text_processed`, `category`, `score` persist after `commit`
+
+## 8.2 `POST /predict` persists when DB dependency overrides SQLite
+
+**Priority:** P0
+
+### Objective
+
+Ensure **`POST /predict`** inserts exactly **one** row when **`classify_ticket`** is mocked and **`get_db`** yields an SQLite session.
+
+### Validate
+
+- HTTP **200**
+- Row matches echoed raw text and mock classifier outputs
+
+## 8.3 DB unavailable surfaces stable error / rollback
+
+**Priority:** P1
+
+### Objective
+
+Ensure failed **`commit`** returns **503** with **`Could not persist ticket; database unavailable.`** and **`rollback`** ran.
+
+## 8.4 Missing configuration yields structured failure
+
+**Priority:** P0
+
+### Objective
+
+When **`DATABASE_URL`** is unset (and dependency overrides cleared), **`POST /predict`** returns **503** `Database persistence not configured.` — enforced against accidental reliance on real DB during CI-style runs via **`conftest.py`** clearing env.
 
 ---
 
@@ -859,6 +876,7 @@ Implement next:
 * internal failure handling
 * schema validation tests
 * artifact loading tests
+* **`test_persistence`** scenarios (SQLite overrides, rollback, missing `DATABASE_URL`)
 
 ---
 
@@ -867,11 +885,10 @@ Implement next:
 Implement later:
 
 * LLM tests
-* database tests
-* webhook tests
+* WhatsApp webhook tests
 * regression suite for bugs discovered in production
 
----
+*(Database persistence tests — **`tests/test_persistence.py`** — shipped with MVP slice.)*
 
 # 12. Definition of a Good Test
 
