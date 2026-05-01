@@ -6,6 +6,10 @@ Implement: lifespan, CORS, global exception handlers as needed. Routers live in
 Do **not** put ML or preprocessing here; call ``predict_category`` only from
 route handlers (or a thin service).
 """
+from dotenv import load_dotenv
+
+load_dotenv()
+
 from fastapi import FastAPI
 
 from app.api.routes import router
