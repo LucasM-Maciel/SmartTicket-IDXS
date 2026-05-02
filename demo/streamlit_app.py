@@ -16,57 +16,56 @@ import streamlit as st
 DEFAULT_API_BASE = "http://127.0.0.1:8000"
 REQUEST_TIMEOUT_S = 30
 
-# Shown in the main panel — keeps Streamlit UI free of the public API hostname when URL is secret‑locked.
+# Main-panel onboarding — English copy aligned with widget labels below.
 TUTORIAL_MARKDOWN = """
-### O que é isto
+### What this is
 
-Esta página é só uma **demonstração**: o texto que escreves é enviado para a **API SmartTicket**
-(o mesmo backend que corre no Railway). Lá corre o **pipeline completo** (limpeza do texto,
-NLTK/stopwords quando disponível, modelo de classificação) e a **triage** (urgência + destino da fila).
-
----
-
-### Passo a passo
-
-1. **Escreve o ticket** na caixa **“New ticket text”** e clica em **“Submit ticket → pipeline”**.
-2. Aparece um resumo com **categoria**, **score**, **urgência** e **queue** (**human** ou **llm**).
-3. Abre os separadores **Human queue** / **LLM queue** para ver os tickets guardados na base,
-   na **mesma ordem** que a API usa em produção (prioridade e FIFO).
+This page is a **demo**: whatever you type is sent to the **SmartTicket API** (your deployed backend,
+e.g. on Railway). There the **full pipeline** runs (text cleaning, NLTK stopwords when available,
+classification model) and **triage** decides urgency and **human** vs **LLM** routing.
 
 ---
 
-### O que significa cada coisa
+### Steps
 
-| Campo | Significado |
-|--------|-------------|
-| **Category** | Label previsto pelo modelo (ex.: pedido de reembolso). |
-| **Score** | Confiança do modelo (0–1). Usado com o limiar **`SMARTTICKET_LLM_MIN_SCORE`** na API para decidir **human** vs **llm**. |
-| **Urgency** | Regra fixa a partir da categoria (**HIGH** / **MEDIUM** / **LOW**). |
-| **Queue target** | **human** = revisão humana (score abaixo do limiar ou política da API); **llm** = fila para tratamento automático quando o score ≥ limiar. |
-| **Human / LLM queue** | Listas vindas de `GET /tickets` com filtro por destino; números entre parêntesis são totais. |
+1. Enter text under **“New ticket text”** and click **“Submit ticket → pipeline”**.
+2. A summary shows **category**, **score**, **urgency**, and **queue** (**human** or **llm**).
+3. Open the **Human queue** / **LLM queue** tabs to browse persisted tickets in the **same order**
+   as production (**HIGH → MEDIUM → LOW**, then FIFO within each tier).
 
 ---
 
-### Health check (barra lateral)
+### Field cheat sheet
 
-**“Check health”** chama `GET /health` na API: **ready** = modelo e vectorizer encontrados; **not_ready** =
-falta de artefactos ou caminho errado no servidor.
+| Field | Meaning |
+|--------|---------|
+| **Category** | Predicted label from the model (e.g. refund request). |
+| **Score** | Model confidence (0–1). Compared on the API to **`SMARTTICKET_LLM_MIN_SCORE`** to pick **human** vs **llm**. |
+| **Urgency** | Rule-based tier from the category (**HIGH** / **MEDIUM** / **LOW**). |
+| **Queue target** | **human** = human review path when score is below the threshold (or policy); **llm** = automated path when score ≥ threshold. |
+| **Human / LLM queue tabs** | Data from `GET /tickets` with `queue_target` filter; counts in parentheses are totals. |
 
 ---
 
-### Privacidade do endereço da API
+### Sidebar: Check health
 
-Quando o URL está fixo por **secret** (`SMARTTICKET_API_BASE_URL`), **não mostramos o link** aqui —
-só indicamos que está configurado. O health check e todos os pedidos continuam a usar esse endereço
-por baixo dos panos.
+**“Check health”** calls `GET /health`: **ready** means model + vectorizer artifacts are present;
+**not_ready** usually means missing files or wrong paths on the API host.
 
-Em desenvolvimento **local**, se não usares secret, podes editar o **Base URL** na barra lateral.
+---
+
+### API URL privacy
+
+When the base URL is fixed via **secret** (`SMARTTICKET_API_BASE_URL`), we **do not display** it here —
+only a confirmation that it is configured. All requests (including the health check) still use that URL.
+
+For **local** runs without secrets, edit **Base URL** in the sidebar.
 
 ---
 
 ### Debug
 
-O expander **“Debug: last queue responses”** mostra o JSON bruto das últimas respostas das filas — útil para demonstrações técnicas.
+**“Debug: last queue responses”** shows raw JSON from the last queue fetches — handy for technical walkthroughs.
 """
 
 
@@ -228,7 +227,7 @@ def main() -> None:
         "and listed below in **API queue order**."
     )
 
-    with st.expander("📖 Como usar este demo", expanded=False):
+    with st.expander("📖 How to use this demo", expanded=False):
         st.markdown(TUTORIAL_MARKDOWN)
 
     locked_base = _locked_api_base()
@@ -248,10 +247,10 @@ def main() -> None:
                 else "environment `SMARTTICKET_API_BASE_URL` (Streamlit Cloud)"
             )
             st.caption(
-                f"O URL da API está fixo ({src}). "
-                "**Não aparece nesta página**; pedidos e health check usam esse endereço em segundo plano."
+                f"API base URL is fixed ({src}). "
+                "**Not shown on this page**; requests and the health check still use it in the background."
             )
-            st.success("✓ Endpoint configurado — URL oculta.")
+            st.success("✓ Backend configured — URL hidden.")
         else:
             st.caption(
                 "On **Streamlit Community Cloud**, set the secret `SMARTTICKET_API_BASE_URL` "
