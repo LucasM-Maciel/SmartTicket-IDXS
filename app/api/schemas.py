@@ -17,6 +17,8 @@ class PredictResponse(BaseModel):
     text: str
     category: str
     score: float
+    urgency: str
+    queue_target: str
 
 
 class HealthResponse(BaseModel):
