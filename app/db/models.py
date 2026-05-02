@@ -23,6 +23,8 @@ class Ticket(Base):
     text_processed: Mapped[str] = mapped_column(Text)
     category: Mapped[str] = mapped_column(String(255))
     score: Mapped[float] = mapped_column(Float)
+    urgency: Mapped[str] = mapped_column(String(32))
+    queue_target: Mapped[str] = mapped_column(String(32))
     status: Mapped[str] = mapped_column(String(64), default="classified")
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now()

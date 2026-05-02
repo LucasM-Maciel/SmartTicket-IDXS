@@ -1,0 +1,10 @@
+# Ruff: https://docs.astral.sh/ruff/
+target-version = "py312"
+
+[lint]
+# Focus on correctness / unused code; line length & isort left to team preference.
+select = ["E402", "F401", "F841", "F811"]
+
+[lint.per-file-ignores]
+# load_dotenv() must run before imports that read os.environ.
+"app/main.py" = ["E402"]

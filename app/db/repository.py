@@ -14,6 +14,8 @@ def save_ticket_prediction(
     text_processed: str,
     category: str,
     score: float,
+    urgency: str,
+    queue_target: str,
     status: str = "classified",
 ) -> Ticket:
     row = Ticket(
@@ -21,6 +23,8 @@ def save_ticket_prediction(
         text_processed=text_processed,
         category=category,
         score=score,
+        urgency=urgency,
+        queue_target=queue_target,
         status=status,
     )
     db.add(row)

@@ -1,7 +1,7 @@
 # Project Context
 ## SmartTicket — Operational Intelligence Platform for Customer Support
 
-> Last updated: 2026-04-24
+> Last updated: 2026-05-02
 > Full product vision: see `docs/product-vision-pt.md` and `docs/product-vision-en.md`
 
 ---
@@ -109,6 +109,73 @@ Implemented on **`feature/api-mvp`** (merge history vs **`develop`**: **`branch-
 > Final count can easily exceed 10 categories depending on the business.
 > The model is retrained for each client's category configuration.
 
+**Refund vs cancellation:** both map to `HIGH` urgency in the MVP policy below; keeping separate classifier labels (`refund_request` vs `cancellation_request`) preserves analytics and playbooks even though urgency is the same.
+
+---
+
+## Technical MVP closure — implementation status
+
+This section records **agreed scope** for finishing the **technical MVP** after persistence. Identifiers in code and APIs are **English**.
+
+### Status (code in repo)
+
+| Slice | Status | Where |
+|-------|--------|--------|
+| Urgency tiers + category mapping | **Shipped** | `app/services/ticket_triage.py` (`HIGH` / `MEDIUM` / `LOW`) |
+| Score → human vs LLM **routing flag** | **Shipped** | `queue_target`: `human` \| `llm`; threshold **`SMARTTICKET_LLM_MIN_SCORE`** (`app/core/triage_settings.py`, default **0.75**) |
+| Persist `urgency` + `queue_target` on `POST /predict` | **Shipped** | `app/db/models.py`, `app/db/repository.py`, `app/api/routes.py`, `PredictResponse` |
+| PostgreSQL migration for existing DBs | **Shipped** | `db/migrations/001_add_urgency_queue_target.sql` |
+| Broker / async consumer / RabbitMQ | **Not** in scope | Logical flags only |
+| **Read** API: ordered queue, filters, pagination | **Pending** | Was **PR 2** in the plan below |
+
+### Completion criteria (original two-PR plan)
+
+| PR | Branch name (suggested) | Scope |
+|---|---|---|
+| **1** | `feature/mvp-urgency-logic` | ✅ Urgency + human/LLM routing fields, persistence on `POST /predict`, migration, env thresholds, **unit tests** (`test_ticket_triage.py`, `test_triage_settings.py`, persistence/API updates) |
+| **2** | `feature/mvp-queue-api` | ⏳ `GET` endpoint(s) for ordered queue + pagination/filters, **integration tests** on ordering |
+
+Optional later (does **not** block technical MVP closure): small **Streamlit** UI for collaborators to exercise the API — see note at end of Development Order.
+
+### Urgency levels (queue tiers)
+
+Three tiers, ordered for servicing: **`HIGH` → `MEDIUM` → `LOW`**.
+
+- **Between tiers:** work through **all `HIGH` tickets before any `MEDIUM`**, then all `MEDIUM` before **`LOW`** (strict tiered queue).
+- **Within the same tier:** **FIFO** by arrival — first ticket created in that tier is answered first (`created_at` ascending as tie-break).
+
+### Category → urgency (MVP)
+
+Deterministic mapping from **predicted category** (model output string must match training labels — normalize casing/spacing if needed):
+
+| Predicted category | Urgency |
+|---|---|
+| `technical_issue` | `MEDIUM` |
+| `product_inquiry` | `MEDIUM` |
+| `billing_inquiry` | `LOW` |
+| `refund_request` | `HIGH` |
+| `cancellation_request` | `HIGH` |
+
+Unknown or unexpected categories: define an explicit fallback (e.g. `MEDIUM` or `LOW`) in code and tests.
+
+### Human vs LLM routing (confidence split)
+
+Separate from urgency: route by **classification score** from `predict_category`:
+
+- **Low score** → **human** queue (low confidence in the predicted label).
+- **High score** → **LLM** queue (high confidence).
+
+Threshold(s) live in **environment variables** (e.g. a single `SMARTTICKET_LLM_MIN_SCORE`) with conservative defaults until real data calibration. Document in `.env.example`.
+
+### Explicitly **not** in technical MVP closure
+
+- **Priority aging** (e.g. `MEDIUM` promoting to `HIGH` after wait time).
+- **Manual urgency override** by agents (downgrade false alarms, etc.).
+- **Review queue** after LLM replies (human feedback / enrichment) — third workflow axis.
+- **RabbitMQ** — logical queue in PostgreSQL + API is enough for this milestone.
+
+These remain **product backlog** after the technical MVP ships.
+
 ---
 
 ## Development Order
@@ -117,7 +184,7 @@ Implemented on **`feature/api-mvp`** (merge history vs **`develop`**: **`branch-
 
 **Pipeline + prediction model — complete as of 2026-04-11:** preprocessing, training (`train_model`), inference (`predict_category`), ML unit tests, and repo-root pytest wrappers (`scripts/retest.*`).
 
-**API + persistence — implemented:** `GET /health`, `POST /predict`, schemas, limits, 503/422 behavior, **`classify_ticket`**, **`app/db`** (`Ticket`, **`DATABASE_URL`**), **`tests/test_api`** + **`tests/test_persistence`**. Merge/git bookkeeping vs **`develop`**: **`docs/branch-feature-api-mvp-vs-develop.md`**.
+**API + persistence + triage — implemented:** `GET /health`, `POST /predict` (response includes **`urgency`**, **`queue_target`**), **`classify_ticket`**, **`triage_prediction`**, **`get_llm_min_score`**, **`app/db`** (`Ticket` with urgency columns), **`tests/test_*`**. Merge/git bookkeeping vs **`develop`**: **`docs/branch-feature-api-mvp-vs-develop.md`**.
 
 1. ✅ Data pipeline (cleaning + normalization)
 2. ✅ ML classification (TF-IDF + Logistic Regression)
@@ -128,15 +195,21 @@ Implemented on **`feature/api-mvp`** (merge history vs **`develop`**: **`branch-
 7. ✅ FastAPI routes — `GET /health`, `POST /predict` + Pydantic schemas *(merge into `develop` may lag — verify with git)*
 8. ✅ HTTP tests — `tests/test_api.py`, **`tests/test_persistence.py`** (`TestClient`, dependency overrides)
 9. ✅ Minimal **`tickets`** persistence (`DATABASE_URL`, SQLAlchemy) — contacts/messages/extended ticket columns **still open**
-10. ⏳ Full product E2E (channels → API → persist **→ reads/UI**, urgency, queue)
+10. ✅ **Urgency + `queue_target`** on `POST /predict` (triage module, env threshold, SQL migration, tests)
+11. ⏳ **`GET` queue / list tickets** (ordered by tier + `created_at`, filters) — closes technical MVP read surface
+12. ⏳ Full product E2E (channels → API → persist **→ reads/UI**, WhatsApp, etc.)
 
 ### Post-MVP
-11. ⏳ WhatsApp integration
-12. ⏳ Agent interface (Streamlit for demo, React for production)
-13. ⏳ LLM integration
-14. ⏳ Priority aging + queue
-15. ⏳ Feedback loop + automatic retraining
-16. ⏳ Monthly analytics report
+13. ⏳ WhatsApp integration
+14. ⏳ Agent interface (Streamlit for demo, React for production)
+15. ⏳ LLM integration (full response path beyond routing flags)
+16. ⏳ Priority aging + manual urgency overrides + review queue (LLM → human feedback)
+17. ⏳ Feedback loop + automatic retraining
+18. ⏳ Monthly analytics report
+
+### Note — optional validation UI before full product MVP
+
+Building a small **Streamlit** screen is optional to let collaborators test the pipeline and queue behavior; it is **not required** to close the technical MVP scope in *Technical MVP closure — implementation status*.
 
 ---
 

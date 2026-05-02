@@ -49,10 +49,10 @@ text → clean → normalize → vectorize (TF-IDF) → model
 
 ---
 
-## Confidence Threshold
+## Confidence threshold (aligned with API routing)
 
-* Score ≥ 0.75 → reliable classification — LLM can attempt automatic resolution
-* Score < 0.75 → goes directly to human queue with "low confidence" flag
+* **ML notes / product:** Score ≥ **0.75** historically described “reliable classification” for a future LLM auto-resolve path; **below** the threshold → human review path (`queue_target: "human"` today).
+* **Runtime API:** the same split is configurable via **`SMARTTICKET_LLM_MIN_SCORE`** (default **0.75**); **`routing_for_score`** uses **`>=`** (inclusive on the LLM side). Keep **`docs/ml-notes.md`**, **`docs/api-contracts.md`**, and **`.env.example`** in sync when changing the default.
 
 ---
 
@@ -101,8 +101,8 @@ To quiet the console: pass `zero_division` to `classification_report` in `app/ml
 * Column names for production CSV: `TEXT_COLUMN` / `LABEL_COLUMN` in `app/core/config.py`
 * Non-string inputs handled in both preprocessing functions: returns empty string to keep pipeline safe
 * First training run completed — results not representative due to synthetic dataset (see Dataset note below)
-* Unit tests (pytest): `test_preprocessing.py`, `test_normalizer.py`, `test_pipeline.py`, `test_train.py`, `test_predict.py`, **`test_api.py`**, **`test_persistence.py`** — fixtures under `tests/fixtures/`; root `conftest.py` strips **`DATABASE_URL`** during runs; see `docs/test-plan.md` and `tests/best_practices.md`
-* **API + persistence:** `GET /health`, `POST /predict` with **`classify_ticket`** + **`save_ticket_prediction`** when **`DATABASE_URL`** is set; see `docs/api-contracts.md`, `docs/security-and-deployment.md`, `docs/architecture.md`
+* Unit tests (pytest): `test_preprocessing.py`, `test_normalizer.py`, `test_pipeline.py`, `test_train.py`, `test_predict.py`, **`test_api.py`**, **`test_persistence.py`**, **`test_ticket_triage.py`**, **`test_triage_settings.py`** — fixtures under `tests/fixtures/`; root `conftest.py` strips **`DATABASE_URL`** during runs; see `docs/test-plan.md` and `tests/best_practices.md`
+* **API + triage:** `GET /health`, `POST /predict` returns **`urgency`** + **`queue_target`**; rules in **`app/services/ticket_triage.py`**, threshold in **`app/core/triage_settings.py`**; Postgres **`db/migrations/001_add_urgency_queue_target.sql`** for existing tables; tests **`test_ticket_triage.py`**, **`test_triage_settings.py`**, updated **`test_api`** / **`test_persistence`**
 * **Future (operations / feedback loop):** dedicated retrain script (e.g. `scripts/retrain.py`) when automated retraining is implemented
 
 ---
