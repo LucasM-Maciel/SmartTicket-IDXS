@@ -16,6 +16,59 @@ import streamlit as st
 DEFAULT_API_BASE = "http://127.0.0.1:8000"
 REQUEST_TIMEOUT_S = 30
 
+# Shown in the main panel — keeps Streamlit UI free of the public API hostname when URL is secret‑locked.
+TUTORIAL_MARKDOWN = """
+### O que é isto
+
+Esta página é só uma **demonstração**: o texto que escreves é enviado para a **API SmartTicket**
+(o mesmo backend que corre no Railway). Lá corre o **pipeline completo** (limpeza do texto,
+NLTK/stopwords quando disponível, modelo de classificação) e a **triage** (urgência + destino da fila).
+
+---
+
+### Passo a passo
+
+1. **Escreve o ticket** na caixa **“New ticket text”** e clica em **“Submit ticket → pipeline”**.
+2. Aparece um resumo com **categoria**, **score**, **urgência** e **queue** (**human** ou **llm**).
+3. Abre os separadores **Human queue** / **LLM queue** para ver os tickets guardados na base,
+   na **mesma ordem** que a API usa em produção (prioridade e FIFO).
+
+---
+
+### O que significa cada coisa
+
+| Campo | Significado |
+|--------|-------------|
+| **Category** | Label previsto pelo modelo (ex.: pedido de reembolso). |
+| **Score** | Confiança do modelo (0–1). Usado com o limiar **`SMARTTICKET_LLM_MIN_SCORE`** na API para decidir **human** vs **llm**. |
+| **Urgency** | Regra fixa a partir da categoria (**HIGH** / **MEDIUM** / **LOW**). |
+| **Queue target** | **human** = revisão humana (score abaixo do limiar ou política da API); **llm** = fila para tratamento automático quando o score ≥ limiar. |
+| **Human / LLM queue** | Listas vindas de `GET /tickets` com filtro por destino; números entre parêntesis são totais. |
+
+---
+
+### Health check (barra lateral)
+
+**“Check health”** chama `GET /health` na API: **ready** = modelo e vectorizer encontrados; **not_ready** =
+falta de artefactos ou caminho errado no servidor.
+
+---
+
+### Privacidade do endereço da API
+
+Quando o URL está fixo por **secret** (`SMARTTICKET_API_BASE_URL`), **não mostramos o link** aqui —
+só indicamos que está configurado. O health check e todos os pedidos continuam a usar esse endereço
+por baixo dos panos.
+
+Em desenvolvimento **local**, se não usares secret, podes editar o **Base URL** na barra lateral.
+
+---
+
+### Debug
+
+O expander **“Debug: last queue responses”** mostra o JSON bruto das últimas respostas das filas — útil para demonstrações técnicas.
+"""
+
 
 def _running_on_streamlit_cloud() -> bool:
     """Heuristic: Streamlit Community Cloud clones the repo under ``/mount/src`` (Linux)."""
@@ -175,6 +228,9 @@ def main() -> None:
         "and listed below in **API queue order**."
     )
 
+    with st.expander("📖 Como usar este demo", expanded=False):
+        st.markdown(TUTORIAL_MARKDOWN)
+
     locked_base = _locked_api_base()
     if locked_base is not None:
         base = locked_base
@@ -192,10 +248,10 @@ def main() -> None:
                 else "environment `SMARTTICKET_API_BASE_URL` (Streamlit Cloud)"
             )
             st.caption(
-                f"API base URL is **fixed** from {src} "
-                "(visitors cannot point this app at arbitrary hosts — SSRF-safe)."
+                f"O URL da API está fixo ({src}). "
+                "**Não aparece nesta página**; pedidos e health check usam esse endereço em segundo plano."
             )
-            st.code(base, language="text")
+            st.success("✓ Endpoint configurado — URL oculta.")
         else:
             st.caption(
                 "On **Streamlit Community Cloud**, set the secret `SMARTTICKET_API_BASE_URL` "
