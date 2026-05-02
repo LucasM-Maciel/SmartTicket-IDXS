@@ -2,9 +2,31 @@ from pathlib import Path
 from typing import NamedTuple
 
 import pytest
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker
+
+from app.db.models import Base
 
 
 _TESTS_DIR = Path(__file__).resolve().parent / "tests"
+
+
+@pytest.fixture
+def sqlite_session_factory(tmp_path):
+    """SQLite file DB with SmartTicket schema — shared by persistence and queue tests."""
+    db_file = tmp_path / "smartticket_tests.db"
+    engine = create_engine(
+        f"sqlite+pysqlite:///{db_file}",
+        future=True,
+        connect_args={"check_same_thread": False},
+    )
+    Base.metadata.create_all(engine)
+    factory = sessionmaker(bind=engine, autocommit=False, autoflush=False)
+    try:
+        yield factory
+    finally:
+        Base.metadata.drop_all(engine)
+        engine.dispose()
 
 
 @pytest.fixture(autouse=True)

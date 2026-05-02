@@ -126,14 +126,14 @@ This section records **agreed scope** for finishing the **technical MVP** after 
 | Persist `urgency` + `queue_target` on `POST /predict` | **Shipped** | `app/db/models.py`, `app/db/repository.py`, `app/api/routes.py`, `PredictResponse` |
 | PostgreSQL migration for existing DBs | **Shipped** | `db/migrations/001_add_urgency_queue_target.sql` |
 | Broker / async consumer / RabbitMQ | **Not** in scope | Logical flags only |
-| **Read** API: ordered queue, filters, pagination | **Pending** | Was **PR 2** in the plan below |
+| **Read** API: ordered queue... | **Shipped** | **`GET /tickets`** — `app/db/queue_repository.py`; tests **`tests/test_queue_api.py`** |
 
 ### Completion criteria (original two-PR plan)
 
 | PR | Branch name (suggested) | Scope |
 |---|---|---|
 | **1** | `feature/mvp-urgency-logic` | ✅ Urgency + human/LLM routing fields, persistence on `POST /predict`, migration, env thresholds, **unit tests** (`test_ticket_triage.py`, `test_triage_settings.py`, persistence/API updates) |
-| **2** | `feature/mvp-queue-api` | ⏳ `GET` endpoint(s) for ordered queue + pagination/filters, **integration tests** on ordering |
+| **2** | `feature/mvp-queue-api` | ✅ **`GET /tickets`** — order HIGH→MEDIUM→LOW then `created_at` ASC; query `queue_target`, `limit`, `offset`; **`TicketQueueResponse`**; **`test_queue_api`** |
 
 Optional later (does **not** block technical MVP closure): small **Streamlit** UI for collaborators to exercise the API — see note at end of Development Order.
 
@@ -184,7 +184,7 @@ These remain **product backlog** after the technical MVP ships.
 
 **Pipeline + prediction model — complete as of 2026-04-11:** preprocessing, training (`train_model`), inference (`predict_category`), ML unit tests, and repo-root pytest wrappers (`scripts/retest.*`).
 
-**API + persistence + triage — implemented:** `GET /health`, `POST /predict` (response includes **`urgency`**, **`queue_target`**), **`classify_ticket`**, **`triage_prediction`**, **`get_llm_min_score`**, **`app/db`** (`Ticket` with urgency columns), **`tests/test_*`**. Merge/git bookkeeping vs **`develop`**: **`docs/branch-feature-api-mvp-vs-develop.md`**.
+**API + persistence + triage + queue read — implemented:** `GET /health`, `POST /predict`, **`GET /tickets`** (paginated, ordered queue), schemas **`TicketQueueItem`** / **`TicketQueueResponse`**, **`list_tickets_queue`**, tests **`test_queue_api`**, root **`conftest.py`** fixture **`sqlite_session_factory`**. Merge/git bookkeeping: **`docs/branch-feature-api-mvp-vs-develop.md`**.
 
 1. ✅ Data pipeline (cleaning + normalization)
 2. ✅ ML classification (TF-IDF + Logistic Regression)
@@ -192,12 +192,12 @@ These remain **product backlog** after the technical MVP ships.
 4. ✅ `predict_category` in `app/ml/predict_category.py` (category + score)
 5. ✅ Edge case handling in predict — empty / blank preprocessed text → `unknown` / `0.0` (`predict_category`); short text still goes through model
 6. ✅ Unit tests — utils, pipeline, `train`, `predict_category`
-7. ✅ FastAPI routes — `GET /health`, `POST /predict` + Pydantic schemas *(merge into `develop` may lag — verify with git)*
-8. ✅ HTTP tests — `tests/test_api.py`, **`tests/test_persistence.py`** (`TestClient`, dependency overrides)
+7. ✅ FastAPI routes — `GET /health`, `POST /predict`, **`GET /tickets`** + Pydantic schemas *(merge into `develop` may lag — verify with git)*
+8. ✅ HTTP tests — `tests/test_api.py`, **`tests/test_persistence.py`**, **`tests/test_queue_api.py`** (`TestClient` / SQLite overrides)
 9. ✅ Minimal **`tickets`** persistence (`DATABASE_URL`, SQLAlchemy) — contacts/messages/extended ticket columns **still open**
 10. ✅ **Urgency + `queue_target`** on `POST /predict` (triage module, env threshold, SQL migration, tests)
-11. ⏳ **`GET` queue / list tickets** (ordered by tier + `created_at`, filters) — closes technical MVP read surface
-12. ⏳ Full product E2E (channels → API → persist **→ reads/UI**, WhatsApp, etc.)
+11. ✅ **`GET /tickets`** queue list (tier order + FIFO, filter `queue_target`, pagination)
+12. ⏳ Full product E2E (channels → API → persist **→ attendant UI**, WhatsApp, etc.)
 
 ### Post-MVP
 13. ⏳ WhatsApp integration

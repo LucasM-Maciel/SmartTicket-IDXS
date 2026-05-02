@@ -1,7 +1,7 @@
 """Deterministic triage rules: urgency from predicted category, routing from score.
 
 All string constants are English — aligned with the technical MVP conventions.
-See ``docs/project-context.md`` (*Technical MVP closure — planned implementation*).
+See ``docs/project-context.md`` (*Technical MVP closure — implementation status*).
 """
 
 from __future__ import annotations
