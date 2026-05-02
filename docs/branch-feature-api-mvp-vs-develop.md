@@ -14,13 +14,13 @@ Summarizes what **`feature/api-mvp`** introduced relative to an older **`develop
 | **Config** | Root-relative defaults only. | **`SMARTTICKET_*`** env overrides for model / vectorizer / dataset paths (`app/core/config.py`). |
 | **Persistence** | None. | **`DATABASE_URL`** → SQLAlchemy; **`tickets`** table (`app/db/models.py`); **`save_ticket_prediction`**; **`POST /predict`** returns **503** if DB unavailable/unconfigured or write fails. |
 | **Services** | Direct ML imports from routes (historically). | **`app/services/classifier.py`** — `ClassificationResult` + **`classify_ticket`**. |
-| **Dependencies** | Baseline `requirements.txt`. | **`sqlalchemy`**, **`psycopg2-binary`**; **`openai`**, **`langchain`** present — **`app/services/llm_service.py`** is a stub only. |
+| **Dependencies** | Baseline `requirements.txt`. | **`sqlalchemy`**, **`psycopg2-binary`**. **LLM** (`openai` / `langchain`) omitted until `llm_service` is implemented — see `requirements.txt` comments. |
 | **Tests** | No/little route coverage. | **`tests/test_api.py`** (`TestClient`, mocked classifier); **`tests/test_persistence.py`** (repository + DB overrides + rollback); **`conftest.py`** clears **`DATABASE_URL`** during pytest. |
 | **Docs** | Minimal contracts. | **`docs/api-contracts.md`**, **`docs/security-and-deployment.md`**, this file; **`README`** setup includes DB + **`.env.example`**. |
 
 ## Still *not* in scope (vs full product MVP)
 
-- **Contacts**, **messages**, urgency columns, **GET/list ticket** APIs, auth, rate limits, webhooks/WhatsApp, agent UI, **LLM** in response path, **RabbitMQ** / priority workers, **Alembic** migrations.
+- **Contacts** / **messages** beyond current `tickets` columns, **GET/list ticket** APIs, auth, rate limits, webhooks/WhatsApp, agent UI, **LLM** in the customer-facing response path, **RabbitMQ** / priority workers, **Alembic** migrations.
 
 ## After merges
 
