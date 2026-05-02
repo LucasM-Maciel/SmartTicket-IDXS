@@ -78,6 +78,30 @@ def _full_url(base: str, path: str) -> str:
     return urljoin(base.rstrip("/") + "/", path.lstrip("/"))
 
 
+def _looks_like_railway_dashboard_url(url: str) -> bool:
+    """``railway.com/project/...`` is the dashboard, not the deployed API."""
+    return "railway.com/project" in (url or "").lower()
+
+
+def _compact_api_error(status_code: int, body: Any) -> str:
+    """Avoid dumping multi‑KB HTML (404 pages) into the UI."""
+    if isinstance(body, dict) and "raw" in body:
+        raw = body["raw"]
+        if isinstance(raw, str):
+            head = raw[:800].lower()
+            if "<!doctype" in head or "<html" in head:
+                return (
+                    f"HTTP {status_code}: got HTML instead of JSON — wrong base URL or path. "
+                    "Use your **deployed FastAPI hostname** (e.g. `https://<name>.up.railway.app`), "
+                    "**not** the Railway **project** page (`railway.com/project/...`). "
+                    "Check `https://…/health` in the browser."
+                )
+            if len(raw) > 400:
+                return f"HTTP {status_code}: non-JSON response ({len(raw)} chars). Snippet: {raw[:180]}…"
+    s = str(body)
+    return s if len(s) <= 700 else s[:700] + "…"
+
+
 def _get_json(base: str, path: str, params: dict[str, Any] | None = None) -> tuple[int, Any]:
     r = requests.get(_full_url(base, path), params=params or {}, timeout=REQUEST_TIMEOUT_S)
     try:
@@ -191,7 +215,7 @@ def main() -> None:
             elif code == 503:
                 st.warning("API up but model **not_ready** — train/copy artifacts or check paths.")
             else:
-                st.error(f"Health HTTP {code}: {body}")
+                st.error(f"Health HTTP {code}: {_compact_api_error(code, body)}")
 
         st.divider()
         st.caption(
@@ -210,6 +234,14 @@ def main() -> None:
             "**https://** FastAPI URL (no trailing slash). See `demo/README.md`."
         )
         st.stop()
+
+    if _looks_like_railway_dashboard_url(base):
+        st.warning(
+            "**This base URL looks like the Railway project/dashboard**, not your FastAPI service. "
+            "In Railway: select the **service** that runs uvicorn → **Settings** → **Networking** "
+            "→ copy the **public URL** (usually `*.up.railway.app`). Put that full value in "
+            "**Streamlit secrets** as `SMARTTICKET_API_BASE_URL` (no `/project/…`, no Postgres URL)."
+        )
 
     col_submit, col_refresh = st.columns([4, 1])
     with col_submit:
@@ -239,11 +271,11 @@ def main() -> None:
                     f"**Queue:** **{body.get('queue_target')}**"
                 )
             elif code == 503:
-                st.error(f"API unavailable (database or model): {body}")
+                st.error(f"API unavailable (database or model): {_compact_api_error(code, body)}")
             elif code == 422:
                 st.error(f"Validation error: {body}")
             else:
-                st.error(f"HTTP {code}: {body}")
+                st.error(_compact_api_error(code, body))
 
     # Load queues (each rerun hits the API — same order as production)
     human_code, human_body = fetch_queue(base, "human")
@@ -252,10 +284,10 @@ def main() -> None:
     err_cols = st.columns(2)
     if human_code != 200:
         with err_cols[0]:
-            st.error(f"Human queue HTTP {human_code}: {human_body}")
+            st.error(f"Human queue — {_compact_api_error(human_code, human_body)}")
     if llm_code != 200:
         with err_cols[1]:
-            st.error(f"LLM queue HTTP {llm_code}: {llm_body}")
+            st.error(f"LLM queue — {_compact_api_error(llm_code, llm_body)}")
 
     human_items: list[dict[str, Any]] = []
     llm_items: list[dict[str, Any]] = []
@@ -302,8 +334,12 @@ def main() -> None:
     with st.expander("Debug: last queue responses"):
         st.json(
             {
-                "human": human_body if human_code == 200 else {"error": human_body},
-                "llm": llm_body if llm_code == 200 else {"error": llm_body},
+                "human": human_body
+                if human_code == 200
+                else {"error": _compact_api_error(human_code, human_body)},
+                "llm": llm_body
+                if llm_code == 200
+                else {"error": _compact_api_error(llm_code, llm_body)},
             }
         )
 

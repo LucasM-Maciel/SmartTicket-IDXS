@@ -39,7 +39,8 @@ Server-side `requests` → **no CORS** needed on FastAPI for this UI.
 ### Troubleshooting
 
 - **Error about localhost on Cloud:** set `SMARTTICKET_API_BASE_URL` to your **public** `https://` API URL.
-- **Empty queues / errors:** API up, `GET /health` → `ready`, Postgres reachable from the API.
+- **HTTP 404 + giant HTML / “Railway” page:** you pasted the **project dashboard** URL (`railway.com/project/...`). Use the **service public URL** instead (Railway → your **service** → **Settings** → **Networking** → domain like `https://something.up.railway.app`). Open `…/health` in the browser to confirm.
+- **Empty queues / other errors:** API running, `GET /health` → `ready`, Postgres configured on the **API** host (`DATABASE_URL`), not in Streamlit secrets.
 
 ### Local fixed URL (optional)
 
