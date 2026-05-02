@@ -214,4 +214,7 @@ venv/
 .env
 __pycache__/
 *.pkl
+# Allow synthetic-trained artifacts for deploy (Railway / GET /health ready)
+!artifacts/model.pkl
+!artifacts/vectorizer.pkl
 app/data/raw/*.csv
