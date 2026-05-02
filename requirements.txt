@@ -23,7 +23,3 @@ psycopg2-binary
 # --- Testing & Quality Assurance ---
 pytest
 httpx
-
-# --- Demo UI ---
-streamlit
-requests

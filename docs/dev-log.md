@@ -193,12 +193,12 @@
 
 ---
 
-## 2026-04-13 (Lucas)
+## 2026-04-11 (Lucas)
 
 ### What was done
 - **Queue read API:** **`GET /tickets`** — query params **`queue_target`** (optional), **`limit`**, **`offset`**; ordering via **`list_tickets_queue`** (**HIGH** → **MEDIUM** → **LOW**, then **`created_at`** ASC); responses **`TicketQueueItem`** / **`TicketQueueResponse`**; errors **503** (no DB / query failure), **422** (invalid **`queue_target`**).
 - **Tests:** **`tests/test_queue_api.py`**; root **`conftest.py`** — **`sqlite_session_factory`** shared with persistence-style overrides.
-- **Docs sync:** **`README.md`** (features + MVP checklists), **`docs/architecture.md`** (queue read path), **`docs/ml-notes.md`**, **`docs/test-plan.md`** (§4.8), **`docs/branch-feature-api-mvp-vs-develop.md`**, **`docs/README.md`** index; cruzado com **`docs/project-context.md`**, **`docs/api-contracts.md`**, **`docs/security-and-deployment.md`**.
+- **Docs sync:** **`README.md`** (features + MVP checklists), **`docs/architecture.md`** (queue read path), **`docs/ml-notes.md`**, **`docs/test-plan.md`** (§4.8), **`docs/branch-feature-api-mvp-vs-develop.md`**, **`docs/README.md`** index; **`docs/project-context.md`** / **`docs/api-contracts.md`** / **`docs/security-and-deployment.md`** already described **`GET /tickets`** — cross-checked.
 
 ### Problems
 - None blocking.
@@ -230,13 +230,11 @@
 - **API + DB:** `PredictResponse` and `Ticket` include **`urgency`** + **`queue_target`**; `POST /predict` persists both; `db/migrations/001_add_urgency_queue_target.sql` for existing PostgreSQL.
 - **Tests:** `tests/test_ticket_triage.py`, `tests/test_triage_settings.py`; updates to `test_api` / `test_persistence`.
 - **Docs:** `README` checklists + samples, `architecture.md`, `project-context.md` (technical MVP closure status), `api-contracts.md`, `ml-notes.md`, `security-and-deployment.md`, `test-plan.md`, `branch-feature-api-mvp-vs-develop.md`, `docs/README.md`.
-- **Fecho do MVP técnico (âmbito *Technical MVP closure*):** marco considerado **concluído em 02/05/2026** — critérios da tabela de encerramento cumpridos no código (triage + persistência + **`GET /tickets`** + testes); referência de data alinhada em **`docs/project-context.md`**, **`README.md`** (Overview + checklist) e **`docs/README.md`**.
 
 ### Problems
 - None blocking.
 
 ### Next Steps
-- Ticket **detail** / **PATCH**, auth, extensões de **`GET /tickets`** conforme o produto (além do filtro **`queue_target`**); leitura de fila documentada na entrada **2026-04-13**.
+- Ticket **detail** / **PATCH**, auth, **`GET /tickets`** extensions as product needs (filters beyond **`queue_target`**) — queue list shipped in **2026-04-11** entry.
 
 ---
-

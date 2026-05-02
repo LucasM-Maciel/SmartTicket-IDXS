@@ -3,8 +3,6 @@
 
 > Last updated: 2026-05-02
 > Full product vision: see `docs/product-vision-pt.md` and `docs/product-vision-en.md`
->
-> **Technical MVP (agreed scope):** **COMPLETE** as of **2026-05-02** (02/05) — see *Technical MVP closure — implementation status* below. *Produto funcional* (WhatsApp, UI, broker, LLM na resposta ao cliente) continua em roadmap, não neste marco.
 
 ---
 
@@ -69,7 +67,7 @@ Delivered by the pipeline/ML track **before** API/database integration (*histori
 
 ### API technical MVP (`feature/api-mvp` vs `develop`)
 
-Implemented on **`feature/api-mvp`** (merge history vs **`develop`**: **`branch-feature-api-mvp-vs-develop.md`**). Includes **`GET /health`**, **`POST /predict`**, **`GET /tickets`** (queue read, **`app/db/queue_repository.py`**), Pydantic + **`MAX_TICKET_TEXT_CHARS`**, env-based artifact paths, **`docs/api-contracts.md`**, **`docs/security-and-deployment.md`**, **`tests/test_api.py`**, **`tests/test_queue_api.py`**. **Persistence:** when **`DATABASE_URL`** is set, **`POST /predict`** writes **`tickets`** (`app/db/*`, **`tests/test_persistence.py`**, **`classify_ticket`** facade in **`app/services/classifier.py`**).
+Implemented on **`feature/api-mvp`** (merge history vs **`develop`**: **`branch-feature-api-mvp-vs-develop.md`**). Includes **`GET /health`**, **`POST /predict`**, Pydantic + **`MAX_TICKET_TEXT_CHARS`**, env-based artifact paths, **`docs/api-contracts.md`**, **`docs/security-and-deployment.md`**, **`tests/test_api.py`**. **Persistence:** when **`DATABASE_URL`** is set, **`POST /predict`** writes **`tickets`** (`app/db/*`, **`tests/test_persistence.py`**, **`classify_ticket`** facade in **`app/services/classifier.py`**).
 
 ---
 
@@ -118,19 +116,6 @@ Implemented on **`feature/api-mvp`** (merge history vs **`develop`**: **`branch-
 ## Technical MVP closure — implementation status
 
 This section records **agreed scope** for finishing the **technical MVP** after persistence. Identifiers in code and APIs are **English**.
-
-**Closure statement:** o **MVP técnico** neste âmbito está **encerrado** (**data de fecho: 02/05/2026**): todos os critérios da tabela abaixo e do plano de dois PRs estão **implementados e testados** no repositório. Trabalho seguinte = **backlog de produto** (canais, fila operacional com broker, UI, detalhe/PATCH de ticket, auth, mensagens, LLM na resposta, etc.), não extensão do marco “technical MVP closure” aqui definido.
-
-### What is new (final technical MVP increment)
-
-Última entrega que **fecha** o MVP técnico (além do que já existia: pipeline, ML, `POST /predict`, persistência, triagem):
-
-- **`GET /tickets`** — leitura paginada da fila persistida: ordem **HIGH → MEDIUM → LOW**, depois **FIFO** por `created_at`; filtro opcional `queue_target` (`human` | `llm`); respostas **503** / **422** conforme contrato.
-- **`app/db/queue_repository.py`** — `list_tickets_queue` (SQL read-only, total + `limit`/`offset`).
-- **Schemas** — `TicketQueueItem`, `TicketQueueResponse` em `app/api/schemas.py`.
-- **Testes** — `tests/test_queue_api.py`; fixture partilhada **`sqlite_session_factory`** em `conftest.py` (raiz do repo).
-
-*Referência de contrato:* `docs/api-contracts.md`. *Histórico de implementação da fila:* `docs/dev-log.md` (**2026-04-13**). *Data oficial de fecho do MVP técnico (âmbito acordado):* **2026-05-02** (02/05).
 
 ### Status (code in repo)
 

@@ -1,6 +1,3 @@
-# Streamlit local secrets (Community Cloud uses dashboard secrets instead)
-.streamlit/secrets.toml
-
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[codz]

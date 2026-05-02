@@ -1,3 +1,0 @@
-# Used by local `streamlit run` and Streamlit Community Cloud.
-[browser]
-gatherUsageStats = false
