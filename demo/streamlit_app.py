@@ -1,22 +1,6 @@
-"""
-Visual demo for SmartTicket-IDXS: submit tickets, inspect human vs LLM queues.
+"""Streamlit demo: calls ``POST /predict`` and ``GET /tickets`` (queue order = API).
 
-Queue order matches the API (HIGH → MEDIUM → LOW, then FIFO by created_at).
-
-Run the FastAPI app with a low LLM threshold so you can see the LLM queue:
-
-  Windows (PowerShell):
-    $env:SMARTTICKET_LLM_MIN_SCORE="0.30"; uvicorn app.main:app --reload
-
-  Linux / macOS:
-    SMARTTICKET_LLM_MIN_SCORE=0.30 uvicorn app.main:app --reload
-
-Then:
-
-  streamlit run demo/streamlit_app.py
-
-Streamlit Community Cloud: set app secret ``SMARTTICKET_API_BASE_URL`` to your
-public FastAPI ``https://`` URL (see ``demo/README.md``).
+Run locally: ``streamlit run demo/streamlit_app.py``. Deploy and env vars: ``demo/README.md``.
 """
 
 from __future__ import annotations
@@ -33,19 +17,60 @@ DEFAULT_API_BASE = "http://127.0.0.1:8000"
 REQUEST_TIMEOUT_S = 30
 
 
+def _running_on_streamlit_cloud() -> bool:
+    """Heuristic: Streamlit Community Cloud clones the repo under ``/mount/src`` (Linux)."""
+    base = (os.environ.get("STREAMLIT_SERVER_BASE_URL") or "").strip().lower()
+    if base.endswith(".streamlit.app"):
+        return True
+    if os.path.isdir("/mount/src"):
+        return True
+    return False
+
+
+def _secret_api_base() -> str | None:
+    """``SMARTTICKET_API_BASE_URL`` from ``st.secrets``, if set."""
+    try:
+        secrets = getattr(st, "secrets", None)
+        if secrets is None or "SMARTTICKET_API_BASE_URL" not in secrets:
+            return None
+        url = str(secrets["SMARTTICKET_API_BASE_URL"]).strip().rstrip("/")
+        return url or None
+    except (FileNotFoundError, KeyError, TypeError, RuntimeError):
+        return None
+
+
+def _locked_api_base() -> str | None:
+    """Secrets URL first; on Cloud only, fall back to env (locks sidebar when fixed)."""
+    fixed = _secret_api_base()
+    if fixed:
+        return fixed
+    if _running_on_streamlit_cloud():
+        env_url = (os.environ.get("SMARTTICKET_API_BASE_URL") or "").strip().rstrip("/")
+        if env_url:
+            return env_url
+    return None
+
+
+def _is_non_public_api_host(url: str) -> bool:
+    """True if the backend is clearly unreachable from Streamlit Cloud."""
+    u = (url or "").strip().lower().rstrip("/")
+    if not u:
+        return True
+    if u.startswith("http://127.") or u.startswith("http://localhost"):
+        return True
+    if u.startswith("http://0.0.0.0") or u.startswith("http://[::1]"):
+        return True
+    return False
+
+
 def initial_api_base() -> str:
-    """Prefer env var, then Streamlit secrets (Community Cloud), then localhost."""
+    """Local / unlocked: env, then secrets, then localhost."""
     env = (os.environ.get("SMARTTICKET_API_BASE_URL") or "").strip().rstrip("/")
     if env:
         return env
-    try:
-        secrets = getattr(st, "secrets", None)
-        if secrets is not None and "SMARTTICKET_API_BASE_URL" in secrets:
-            url = str(secrets["SMARTTICKET_API_BASE_URL"]).strip().rstrip("/")
-            if url:
-                return url
-    except (FileNotFoundError, KeyError, TypeError, RuntimeError):
-        pass
+    u = _secret_api_base()
+    if u:
+        return u
     return DEFAULT_API_BASE
 
 
@@ -126,18 +151,38 @@ def main() -> None:
         "and listed below in **API queue order**."
     )
 
-    if "api_base" not in st.session_state:
-        st.session_state.api_base = initial_api_base()
+    locked_base = _locked_api_base()
+    if locked_base is not None:
+        base = locked_base
+        st.session_state.api_base = base
+    else:
+        if "api_base" not in st.session_state:
+            st.session_state.api_base = initial_api_base()
 
     with st.sidebar:
         st.header("API")
-        st.caption(
-            "On **Streamlit Community Cloud**, set the secret `SMARTTICKET_API_BASE_URL` "
-            "to your deployed API (https://…). Local dev: leave default or `http://127.0.0.1:8000`."
-        )
-        base = st.text_input("Base URL", value=st.session_state.api_base, key="api_base_input")
-        st.session_state.api_base = base.strip() or initial_api_base()
-        base = st.session_state.api_base
+        if locked_base is not None:
+            src = (
+                "app secret `SMARTTICKET_API_BASE_URL`"
+                if _secret_api_base()
+                else "environment `SMARTTICKET_API_BASE_URL` (Streamlit Cloud)"
+            )
+            st.caption(
+                f"API base URL is **fixed** from {src} "
+                "(visitors cannot point this app at arbitrary hosts — SSRF-safe)."
+            )
+            st.code(base, language="text")
+        else:
+            st.caption(
+                "On **Streamlit Community Cloud**, set the secret `SMARTTICKET_API_BASE_URL` "
+                "to your deployed API (https://…). Local dev: edit below or use "
+                "`http://127.0.0.1:8000`."
+            )
+            typed = st.text_input(
+                "Base URL", value=st.session_state.api_base, key="api_base_input"
+            )
+            st.session_state.api_base = typed.strip() or initial_api_base()
+            base = st.session_state.api_base
 
         if st.button("Check health"):
             code, body = fetch_health(base)
@@ -149,11 +194,22 @@ def main() -> None:
                 st.error(f"Health HTTP {code}: {body}")
 
         st.divider()
-        st.markdown(
-            "**LLM queue threshold:** routing uses `SMARTTICKET_LLM_MIN_SCORE` on the **API process**. "
-            "For this demo (more tickets → LLM), start uvicorn with **`0.30`**:\n\n"
-            r"`$env:SMARTTICKET_LLM_MIN_SCORE='0.30'` then `uvicorn app.main:app --reload`"
+        st.caption(
+            "Human vs LLM routing uses **`SMARTTICKET_LLM_MIN_SCORE`** on the API host (see `.env.example`)."
         )
+
+    if (
+        _running_on_streamlit_cloud()
+        and locked_base is None
+        and _is_non_public_api_host(base)
+    ):
+        st.error(
+            "This app is running on **Streamlit Community Cloud**, but the API base URL points "
+            "to **localhost** (or another host the cloud cannot reach). "
+            "Open **App settings → Secrets** and set `SMARTTICKET_API_BASE_URL` to your public "
+            "**https://** FastAPI URL (no trailing slash). See `demo/README.md`."
+        )
+        st.stop()
 
     col_submit, col_refresh = st.columns([4, 1])
     with col_submit:
@@ -216,10 +272,7 @@ def main() -> None:
     )
 
     with tab_human:
-        st.markdown(
-            "Order: **HIGH → MEDIUM → LOW**, then oldest first. "
-            "Same ordering as `GET /tickets?queue_target=human`."
-        )
+        st.markdown("Ordering: **`GET /tickets?queue_target=human`** (HIGH → MEDIUM → LOW, then FIFO).")
         if not human_items:
             st.info("No tickets in the human queue.")
         else:
@@ -233,10 +286,7 @@ def main() -> None:
             _render_ticket_detail(human_items[int(choice_h)])
 
     with tab_llm:
-        st.markdown(
-            "Same ordering rules. With **`SMARTTICKET_LLM_MIN_SCORE=0.30`** on the API, "
-            "scores **≥ 0.30** route here (unless you change the env)."
-        )
+        st.markdown("Same ordering as **`GET /tickets?queue_target=llm`** (threshold on API).")
         if not llm_items:
             st.info("No tickets in the LLM queue.")
         else:
@@ -249,11 +299,13 @@ def main() -> None:
             )
             _render_ticket_detail(llm_items[int(choice_l)])
 
-    with st.expander("Raw JSON (last human queue response)"):
-        st.json(human_body if human_code == 200 else {"error": human_body})
-
-    with st.expander("Raw JSON (last LLM queue response)"):
-        st.json(llm_body if llm_code == 200 else {"error": llm_body})
+    with st.expander("Debug: last queue responses"):
+        st.json(
+            {
+                "human": human_body if human_code == 200 else {"error": human_body},
+                "llm": llm_body if llm_code == 200 else {"error": llm_body},
+            }
+        )
 
 
 if __name__ == "__main__":
