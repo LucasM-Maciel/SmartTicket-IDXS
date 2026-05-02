@@ -292,7 +292,7 @@ The `text` field is capped for API safety; see `app/core/limits.py` and `docs/ap
 - **MVP slice (2026-04-11):** pipeline + training + `predict_category` is complete (DB persistence was out of scope for that slice only).
 - **API + persistence + triage + queue read:** `GET /health`, `POST /predict`, **`GET /tickets`** (ordered list + pagination + `queue_target` filter); **`urgency`** + **`queue_target`** in JSON + DB; **`SMARTTICKET_LLM_MIN_SCORE`** in `.env.example` (`app/core/triage_settings.py`, `app/services/ticket_triage.py`, `app/db/queue_repository.py`); SQL migration **`db/migrations/001_add_urgency_queue_target.sql`** for existing Postgres tables; tests **`test_queue_api.py`**
 - **Tests:** `test_ticket_triage.py`, `test_triage_settings.py`, plus `test_api` / `test_persistence` updates — see `docs/test-plan.md`
-- **Streamlit attendant demo:** `demo/streamlit_app.py` calls **`POST /predict`** and **`GET /tickets`** (server-side `requests` — no CORS needed for this UI). Local run and **[Streamlit Community Cloud](https://share.streamlit.io/)** setup (**Main file:** `demo/streamlit_app.py`, **Requirements file:** `demo/requirements.txt`, secret **`SMARTTICKET_API_BASE_URL`**) are in [`demo/README.md`](demo/README.md).
+- **Streamlit demo:** [`demo/README.md`](demo/README.md) — **Main file** `demo/streamlit_app.py`, Cloud **requirements** `demo/requirements.txt`, secret **`SMARTTICKET_API_BASE_URL`**.
 
 ---
 

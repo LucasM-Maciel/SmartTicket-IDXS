@@ -24,7 +24,7 @@
 
 ## Demo UI (Streamlit)
 
-- **Local + [Streamlit Community Cloud](https://share.streamlit.io/):** [`demo/README.md`](../demo/README.md) — main file `demo/streamlit_app.py`, minimal `demo/requirements.txt`, secret `SMARTTICKET_API_BASE_URL` for a **public** FastAPI URL. See also `docs/security-and-deployment.md` (demo + secrets).
+- **[demo/README.md](../demo/README.md)** — run, Community Cloud, **`SMARTTICKET_API_BASE_URL`**. Security notes: **`docs/security-and-deployment.md`**.
 
 ## Testing & scripts
 
