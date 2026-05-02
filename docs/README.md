@@ -22,6 +22,10 @@
 | `reuniao-regras-negocio.md` | Business alignment (PT) |
 | `product-vision-en.md` / `product-vision-pt.md` | Full product vision |
 
+## Demo UI (Streamlit)
+
+- **Local + [Streamlit Community Cloud](https://share.streamlit.io/):** [`demo/README.md`](../demo/README.md) — main file `demo/streamlit_app.py`, minimal `demo/requirements.txt`, secret `SMARTTICKET_API_BASE_URL` for a **public** FastAPI URL. See also `docs/security-and-deployment.md` (demo + secrets).
+
 ## Testing & scripts
 
 - Run tests: `scripts/retest.ps1` / `scripts/retest.bat` — details in `scripts/retest.md`
