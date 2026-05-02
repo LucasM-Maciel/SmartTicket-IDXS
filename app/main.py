@@ -15,6 +15,7 @@ load_dotenv()
 from fastapi import FastAPI
 
 from app.api.routes import router
+from app.core.config import fastapi_documentation_kwargs
 from app.core.nltk_bootstrap import ensure_nltk_stopwords
 
 
@@ -24,5 +25,10 @@ async def lifespan(_: FastAPI):
     yield
 
 
-app = FastAPI(title="SmartTicket-IDXS", version="0.1.0", lifespan=lifespan)
+app = FastAPI(
+    title="SmartTicket-IDXS",
+    version="0.1.0",
+    lifespan=lifespan,
+    **fastapi_documentation_kwargs(),
+)
 app.include_router(router)
