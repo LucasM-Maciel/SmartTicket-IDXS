@@ -54,7 +54,7 @@ FastAPI exposes `/docs` and `/redoc`. For a public API you may **disable** or **
 |--------|--------|
 | Max `text` length (HTTP + training row filter) | `app/core/limits.py` → `MAX_TICKET_TEXT_CHARS` |
 | Database URL (never commit real credentials) | Env **`DATABASE_URL`** · template **`/.env.example`** |
-
+| LLM vs human routing threshold | **`SMARTTICKET_LLM_MIN_SCORE`** · `app/core/triage_settings.py` |
 
 
 Tuning the limit: change the constant, run tests, and update `api-contracts.md` if the documented number is mentioned explicitly.

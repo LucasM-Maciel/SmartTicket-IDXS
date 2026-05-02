@@ -204,6 +204,21 @@
 - `POST /predict` runs inference before failing when **`DATABASE_URL`** is missing — documented behavior (potential refactor later).
 
 ### Next Steps
-- **Alembic** migrations + expanded entities (**contacts**, **messages**, urgency); read/query APIs; optionally reorder guardrails so inference skips when DB is absent.
+- **`GET` queue** API + integration tests; **Alembic** or more SQL migrations as schema grows; optional inference-before-DB reorder
 
+---
+
+## 2026-05-02 (Lucas)
+
+### What was done
+- **Ticket triage:** `app/services/ticket_triage.py` (category → **`HIGH`/`MEDIUM`/`LOW`**, score → **`human`/`llm`**), `app/core/triage_settings.py` (**`SMARTTICKET_LLM_MIN_SCORE`**, clamp + safe parse).
+- **API + DB:** `PredictResponse` and `Ticket` include **`urgency`** + **`queue_target`**; `POST /predict` persists both; `db/migrations/001_add_urgency_queue_target.sql` for existing PostgreSQL.
+- **Tests:** `tests/test_ticket_triage.py`, `tests/test_triage_settings.py`; updates to `test_api` / `test_persistence`.
+- **Docs:** `README` checklists + samples, `architecture.md`, `project-context.md` (technical MVP closure status), `api-contracts.md`, `ml-notes.md`, `security-and-deployment.md`, `test-plan.md`, `branch-feature-api-mvp-vs-develop.md`, `docs/README.md`.
+
+### Problems
+- None blocking.
+
+### Next Steps
+- **`GET` / list queue** ordered by urgency tier + `created_at` (per `project-context` PR 2).
 

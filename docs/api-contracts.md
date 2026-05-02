@@ -1,6 +1,6 @@
 # API contracts (SmartTicket-IDXS)
 
-> **Branch note:** Use **`branch-feature-api-mvp-vs-develop.md`** + **`git diff`** for lineage — stack includes **`DATABASE_URL`** persistence (`POST /predict` writes **`tickets`**).
+> **Branch note:** Stack includes **`DATABASE_URL`** persistence, **`urgency`**, **`queue_target`**, and **`SMARTTICKET_LLM_MIN_SCORE`** — see **`branch-feature-api-mvp-vs-develop.md`** + `git diff`.
 
 > This file describes **HTTP JSON** contracts. The **primary scope** below is the **technical MVP** (synthetic tickets → API → ML → persist/queue *as a design target*). Broader product routes (WhatsApp, attendant CRUD) live in the appendix.
 
@@ -15,8 +15,8 @@ Matches the **“Technical SmartTicket MVP”** diagram: a **modular FastAPI** o
 | **Test dataset** (“Synthetic tickets”) | Not a separate *route*: a **client** (script, `curl`, `httpx`, tests) sends `{"text": "…"}` to the API. Same idea as “synthetic tickets in”. |
 | **API SmartTicket (modular)** | `FastAPI` + `app/api/routes.py` (+ future services). |
 | **Pre-processing pipeline** + **Prediction model** | `run_pipeline` inside **`classify_ticket`** → `predict_category`; **`GET /health`** probes artifact *files* only. |
-| **DB** (“Persist ticket + classification + score”) | **Implemented:** `POST /predict` writes **`tickets`** when `DATABASE_URL` is set (SQLAlchemy; **PostgreSQL** in deployments). **Tests** inject SQLite sessions — not implied production behavior. Returns **503** if persistence is not configured or the write fails. |
-| **Priority queue** (urgency / “prioritized by …”) | **Planned** as **logical** queue (e.g. Postgres + scheduler), **not** a separate public REST resource in the first technical slice. |
+| **DB** (“Persist ticket + classification + score + routing”) | **Implemented:** includes **`urgency`** and **`queue_target`**; see `ticket_triage.py` / `triage_settings.py`. |
+| **Priority queue** (broker / workers) | **Not** implemented; **`queue_target`** is a persisted **routing flag** only (`human` / `llm`). |
 
 **HTTP surface for the technical MVP (keep small):**
 
@@ -104,7 +104,7 @@ Optional later without changing the diagram’s core story: `GET /version` (debu
   | Variable | Role |
   |----------|------|
   | `DATABASE_URL` | PostgreSQL URL for SQLAlchemy (**required** at runtime for successful `POST /predict`; see `.env.example`) |
-  | `SMARTTICKET_LLM_MIN_SCORE` | Minimum score to route to `queue_target: "llm"` (default **0.75**) |
+  | `SMARTTICKET_LLM_MIN_SCORE` | Score threshold in **[0, 1]** (clamped); `score >=` value → `queue_target: "llm"`, else `"human"` — default **0.75** if unset/invalid (`app/core/triage_settings.py`) |
   | `SMARTTICKET_MODEL_PATH` | Trained model `.pkl` |
   | `SMARTTICKET_VECTORIZER_PATH` | Vectorizer `.pkl` |
   | `SMARTTICKET_DATASET_PATH` | Training CSV (training script / notebooks) |

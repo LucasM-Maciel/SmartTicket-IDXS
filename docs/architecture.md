@@ -1,6 +1,6 @@
 # System Architecture
 
-> Last updated: 2026-04-24
+> Last updated: 2026-04-25
 
 ## Overview
 
@@ -71,6 +71,7 @@ Both modes still show **one deployable API** (modular monolith). Optional **sub-
 HTTP POST /predict
 → Pydantic validation (PredictRequest)
 → classify_ticket(text) → predict_category → category + score + text_processed
+→ triage_prediction(category, score, llm_min_score=get_llm_min_score()) → urgency + queue_target
 → save_ticket_prediction(...) → INSERT INTO tickets
 → commit
 → PredictResponse JSON
@@ -171,8 +172,9 @@ Client
 → API (FastAPI)
 → Validation
 → classify_ticket → predict_category (pipeline: clean → normalize → vectorize)
+→ triage_prediction (urgency + queue_target)
 → save_ticket_prediction → PostgreSQL (tickets)
-→ JSON response (text echo + category + score)
+→ JSON response (text echo + category + score + urgency + queue_target)
 ```
 
 *(LLM step remains future — see `app/services/llm_service.py` stub.)*
@@ -195,12 +197,13 @@ Dataset
 ## Folder responsibilities
 
 - `app/api` — routes and HTTP handling
-- `app/services` — `classify_ticket`, `run_pipeline`, future orchestration (`llm_service` stub)
+- `app/services` — `classify_ticket`, **`triage_prediction`** (`ticket_triage.py`), `run_pipeline`, `llm_service` stub
 - `app/ml` — training and prediction
 - `app/db` — SQLAlchemy models (`Ticket`), session factory (`DATABASE_URL`), repository writes
 - `app/utils` — reusable text functions
 - `app/data` — datasets (not production DB)
-- `app/core` — configuration (paths, columns, limits); env-driven deployment keys documented in `api-contracts.md` / `.env.example`
+- `app/core` — configuration (`config.py`, **`triage_settings.py`**), limits; env keys in `api-contracts.md` / `.env.example`
+- `db/migrations/` — hand-written SQL for PostgreSQL schema advances (e.g. add columns); not Alembic
 - `scripts/` — thin CLI wrappers (e.g. pytest from repo root, `post_test_ticket.py`); must call logic in `app/`, not duplicate it
 
 ---
@@ -216,10 +219,14 @@ Dataset
 | `text_processed` | Output of preprocessing before vectorization |
 | `category` | Predicted label |
 | `score` | Model confidence |
+| `urgency` | `HIGH` \| `MEDIUM` \| `LOW` — from **`triage_prediction`** / category map |
+| `queue_target` | `human` \| `llm` — from score vs **`SMARTTICKET_LLM_MIN_SCORE`** |
 | `status` | Default `classified` |
 | `created_at` | Server default timestamp (timezone-aware) |
 
-Schema creation today: **`Base.metadata.create_all`** (see README setup); **Alembic migrations** are not wired yet.
+**Greenfield:** `Base.metadata.create_all` matches this model (see README).
+
+**Existing PostgreSQL:** apply **`db/migrations/001_add_urgency_queue_target.sql`** if the table predates these columns. SQLite tests build schema from metadata only.
 
 ### Planned (product MVP — not implemented)
 

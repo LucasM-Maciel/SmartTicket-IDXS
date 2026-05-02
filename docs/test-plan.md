@@ -647,6 +647,22 @@ Ensure feature matrix and labels are compatible.
 
 ---
 
+## 6B. Triage rules (`test_ticket_triage.py`, `test_triage_settings.py`)
+
+**Priority:** P0 for routing correctness
+
+### Objective
+
+Cover **deterministic** urgency (**category → `HIGH`/`MEDIUM`/`LOW`**) and **`queue_target`** (**`human`** vs **`llm`** from score vs **`SMARTTICKET_LLM_MIN_SCORE`**), including env parsing edge cases (invalid, clamp past [0,1]).
+
+### Validate
+
+* known categories map to expected urgency tiers
+* score thresholds use **inclusive** boundary on LLM side where specified
+* **`get_llm_min_score`** falls back safely on bad env values
+
+---
+
 # 7. Future LLM Tests (`test_llm_service.py`)
 
 ## 7.1 LLM response generation returns text

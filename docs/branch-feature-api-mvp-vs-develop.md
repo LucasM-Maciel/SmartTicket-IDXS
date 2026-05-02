@@ -8,14 +8,14 @@ Summarizes what **`feature/api-mvp`** introduced relative to an older **`develop
 
 | Area | Older `develop` | Current MVP stack (`feature/api-mvp` + persistence) |
 |------|-----------------|------------------------------------------------------|
-| **HTTP API** | `app/api/routes.py` stub (TODOs). | **`GET /health`**, **`POST /predict`**; handlers call **`classify_ticket`** → `predict_category`. |
-| **Schemas** | Near-empty `schemas.py`. | **`PredictRequest`**, **`PredictResponse`**, **`HealthResponse`**; `max_length` from **`app/core/limits.py`**. |
+| **HTTP API** | `app/api/routes.py` stub (TODOs). | **`GET /health`**, **`POST /predict`**; **`classify_ticket`** → **`triage_prediction`** → persist **`urgency`** + **`queue_target`**. |
+| **Schemas** | Near-empty `schemas.py`. | **`PredictRequest`**, **`PredictResponse`** (+ **`urgency`**, **`queue_target`**), **`HealthResponse`**; `max_length` from **`app/core/limits.py`**. |
 | **Limits** | No shared constant. | **`MAX_TICKET_TEXT_CHARS`** — API validation + **`train_model`** row filter. |
-| **Config** | Root-relative defaults only. | **`SMARTTICKET_*`** env overrides for model / vectorizer / dataset paths (`app/core/config.py`). |
-| **Persistence** | None. | **`DATABASE_URL`** → SQLAlchemy; **`tickets`** table (`app/db/models.py`); **`save_ticket_prediction`**; **`POST /predict`** returns **503** if DB unavailable/unconfigured or write fails. |
-| **Services** | Direct ML imports from routes (historically). | **`app/services/classifier.py`** — `ClassificationResult` + **`classify_ticket`**. |
-| **Dependencies** | Baseline `requirements.txt`. | **`sqlalchemy`**, **`psycopg2-binary`**. **LLM** (`openai` / `langchain`) omitted until `llm_service` is implemented — see `requirements.txt` comments. |
-| **Tests** | No/little route coverage. | **`tests/test_api.py`** (`TestClient`, mocked classifier); **`tests/test_persistence.py`** (repository + DB overrides + rollback); **`conftest.py`** clears **`DATABASE_URL`** during pytest. |
+| **Config** | Root-relative defaults only. | **`SMARTTICKET_*`** paths (`app/core/config.py`); **`SMARTTICKET_LLM_MIN_SCORE`** (`app/core/triage_settings.py`). |
+| **Persistence** | None. | **`DATABASE_URL`** → SQLAlchemy; **`tickets`** incl. **`urgency`**, **`queue_target`**; **`db/migrations/001_add_urgency_queue_target.sql`** for legacy Postgres. |
+| **Services** | Direct ML imports from routes (historically). | **`classifier.py`**, **`ticket_triage.py`**. |
+| **Dependencies** | Baseline `requirements.txt`. | **`sqlalchemy`**, **`psycopg2-binary`**. LLM deps **commented** until `llm_service` is implemented. |
+| **Tests** | No/little route coverage. | **`test_api`**, **`test_persistence`**, **`test_ticket_triage`**, **`test_triage_settings`**; **`conftest.py`** clears **`DATABASE_URL`**. |
 | **Docs** | Minimal contracts. | **`docs/api-contracts.md`**, **`docs/security-and-deployment.md`**, this file; **`README`** setup includes DB + **`.env.example`**. |
 
 ## Still *not* in scope (vs full product MVP)
