@@ -126,6 +126,7 @@ Each item includes: `id`, `text_raw`, `text_processed`, `category`, `score`, `ur
 - **Content-Type** for request bodies: `application/json` unless noted.
 - **Errors:** FastAPI default `{"detail": ...}` is fine until you add a shared error schema. For `POST /predict` artifact failures, `detail` is stable (see route notes above).
 - **Limits:** `app/core/limits.py` — `MAX_TICKET_TEXT_CHARS` caps `text` on `POST /predict` (Pydantic) and excludes over-long rows in `train_model` so training matches the API bound.
+- **Startup (normalization parity):** FastAPI **`lifespan`** in **`app/main.py`** calls **`ensure_nltk_stopwords()`** (`app/core/nltk_bootstrap.py`) — may download NLTK **stopwords** on first run; if download is impossible, the process still starts (`normalize_text` may **passthrough**). See **`docs/security-and-deployment.md`** (egress / air-gapped).
 - **Paths (`app/core/config.py`):** defaults point at the repo layout (`artifacts/*.pkl`, dataset under `app/data/...`). Optional overrides — if set to a non-empty string, that path is used (`~` is expanded):
 
   | Variable | Role |
@@ -135,6 +136,7 @@ Each item includes: `id`, `text_raw`, `text_processed`, `category`, `score`, `ur
   | `SMARTTICKET_MODEL_PATH` | Trained model `.pkl` |
   | `SMARTTICKET_VECTORIZER_PATH` | Vectorizer `.pkl` |
   | `SMARTTICKET_DATASET_PATH` | Training CSV (training script / notebooks) |
+  | `SMARTTICKET_DISABLE_OPENAPI` | If **`1`** / **`true`** / **`yes`**, hides **`/docs`**, **`/redoc`**, and the OpenAPI schema URL (`app.core.config.fastapi_documentation_kwargs` → **`app/main.py`**) |
 
 ---
 

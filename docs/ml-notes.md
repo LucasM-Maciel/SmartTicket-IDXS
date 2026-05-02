@@ -81,9 +81,11 @@ Train the model with accumulated conversation messages as a single context, sepa
 
 ## sklearn warnings during training smoke tests
 
-`tests/test_train.py` (e.g. `test_train_model_valid_artifacts`) runs `train_model`, which prints scikit-learn’s `classification_report` using the small fixture at `tests/fixtures/minimal_train.csv`. With very few rows in the test split, some labels may have **no predicted samples**; sklearn then emits `UndefinedMetricWarning` (precision is ill-defined for that label). **Pytest can still report *passed* with warnings.** That is a **known side effect** of this tiny fixture plus `classification_report`—it does **not** mean the test failed, and it is **not** something you should treat as “normal” when training on the full production dataset (where metrics should be well-defined if the split and labels are sound).
+`tests/test_train.py` (e.g. `test_train_model_valid_artifacts`) runs `train_model`, which prints scikit-learn’s `classification_report` using the small fixture at `tests/fixtures/minimal_train.csv`. With very few rows in the test split, some labels may have **no predicted samples**; without mitigation, sklearn emits `UndefinedMetricWarning` for precision on that label.
 
-To quiet the console: pass `zero_division` to `classification_report` in `app/ml/train.py`, or add a `filterwarnings` rule in pytest configuration.
+**Current code:** `app/ml/train.py` passes **`zero_division=0`** into **`classification_report`**, which **reduces** that noise for the training smoke path. **Pytest can still show sklearn warnings** from other modules or tests (e.g. metrics used elsewhere). That does **not** mean the test failed. On a full production dataset with a sound split, metrics should be well-defined.
+
+If you need a completely silent run, add a **`filterwarnings`** rule in pytest configuration.
 
 ---
 
@@ -94,14 +96,15 @@ To quiet the console: pass `zero_division` to `classification_report` in `app/ml
 * Input column: `Ticket Description`
 * Label column: `Ticket Type`
 * `clean_text` implemented in `app/utils/text_cleaning.py` (lowercase, strip, regex symbol removal, whitespace normalization)
-* `normalize_text` implemented in `app/utils/normalizer.py` (stopword removal via NLTK, configurable language, defaults to English)
+* `normalize_text` implemented in `app/utils/normalizer.py` (stopword removal via NLTK, configurable language, defaults to English); if the stopwords corpus is missing, **passthrough** applies — at **API** startup, `app/main` lifespan calls **`ensure_nltk_stopwords()`** (`app/core/nltk_bootstrap.py`) to align deploy behavior with training where possible (see `docs/security-and-deployment.md`)
 * `run_pipeline` implemented in `app/services/pipeline.py` (orchestrates `clean_text` → `normalize_text`)
 * `train_model` implemented in `app/ml/train.py` (TF-IDF + Logistic Regression, 75/25 split, artifacts saved via `joblib`): configurable CSV column names and output paths; rows with missing text/label are dropped; rows over `MAX_TICKET_TEXT_CHARS` are dropped; rows with empty text after `run_pipeline` are dropped before splitting
 * `predict_category` implemented in `app/ml/predict_category.py` (category + confidence); blank preprocessed text → `unknown` / `0.0` without loading artifacts; lazy thread-safe load/cache of model and vectorizer from `MODEL_PATH` / `VECTORIZER_PATH`
 * Column names for production CSV: `TEXT_COLUMN` / `LABEL_COLUMN` in `app/core/config.py`
 * Non-string inputs handled in both preprocessing functions: returns empty string to keep pipeline safe
 * First training run completed — results not representative due to synthetic dataset (see Dataset note below)
-* Unit tests (pytest): `test_preprocessing.py`, `test_normalizer.py`, `test_pipeline.py`, `test_train.py`, `test_predict.py`, **`test_api.py`**, **`test_persistence.py`**, **`test_queue_api.py`**, **`test_ticket_triage.py`**, **`test_triage_settings.py`** — fixtures under `tests/fixtures/`; root `conftest.py` strips **`DATABASE_URL`** during runs; see `docs/test-plan.md` and `tests/best_practices.md`
+* Unit tests (pytest): `test_preprocessing.py`, `test_normalizer.py`, `test_pipeline.py`, `test_train.py`, `test_predict.py`, **`test_nltk_bootstrap.py`**, **`test_fastapi_documentation_env.py`**, **`test_api.py`**, **`test_persistence.py`**, **`test_queue_api.py`**, **`test_ticket_triage.py`**, **`test_triage_settings.py`** — fixtures under `tests/fixtures/`; root `conftest.py` **autouse** clears **`DATABASE_URL`** and calls **`reset_db_engine_state()`** at **fixture start and end** so the SQLAlchemy engine cache never leaks Postgres config between tests; see `docs/test-plan.md` and `tests/best_practices.md`
+* **API / app bootstrap:** `app/main.py` loads `.env`, applies **`fastapi_documentation_kwargs()`** (`SMARTTICKET_DISABLE_OPENAPI`), runs **`ensure_nltk_stopwords`** on lifespan startup, mounts FastAPI routes (`docs/architecture.md`)
 * **API + triage + queue read:** `GET /health`, `POST /predict` returns **`urgency`** + **`queue_target`**; **`GET /tickets`** lists persisted tickets in queue order (`app/db/queue_repository.py`); rules in **`app/services/ticket_triage.py`**, threshold in **`app/core/triage_settings.py`**; Postgres **`db/migrations/001_add_urgency_queue_target.sql`** for existing tables; tests **`test_ticket_triage.py`**, **`test_triage_settings.py`**, **`test_queue_api`**, updated **`test_api`** / **`test_persistence`**
 * **Future (operations / feedback loop):** dedicated retrain script (e.g. `scripts/retrain.py`) when automated retraining is implemented
 

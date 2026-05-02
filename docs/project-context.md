@@ -224,7 +224,7 @@ These remain **product backlog** after the technical MVP ships.
 
 ### Note — optional validation UI before full product MVP
 
-Building a small **Streamlit** screen is optional to let collaborators test the pipeline and queue behavior; it is **not required** to close the technical MVP scope in *Technical MVP closure — implementation status*.
+Building a small **Streamlit** screen is optional to let collaborators test the pipeline and queue behavior; it is **not required** to close the technical MVP scope in *Technical MVP closure — implementation status*. **Reference implementation:** **`demo/streamlit_app.py`** + **`demo/README.md`** (local run + Streamlit Community Cloud, secret **`SMARTTICKET_API_BASE_URL`**).
 
 ---
 

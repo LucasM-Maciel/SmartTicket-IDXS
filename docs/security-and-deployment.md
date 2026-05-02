@@ -12,6 +12,8 @@ Operational decisions and follow-ups. For request JSON shapes, see `api-contract
 
 - **Offline training:** `train_model` in `app/ml/train.py` drops CSV rows whose raw text column exceeds the same `MAX_TICKET_TEXT_CHARS`, keeping the training distribution aligned with what the API accepts.
 
+- **NLTK stopwords at API startup:** `app.main` lifespan calls `ensure_nltk_stopwords()` (`app/core/nltk_bootstrap.py`) so slim deploy images can auto-fetch the **stopwords** corpus when missing. That needs **outbound HTTPS** to NLTK hosts on first run; if download fails, the app still starts and `normalize_text` **passthrough** applies when the corpus is absent. Air-gapped: pre-install `nltk_data` in the image or accept passthrough until you bake data in.
+
 ## Documented for now (review before public or production)
 
 ### Model files (`joblib` / pickle)
@@ -44,6 +46,8 @@ CORS is not enabled in `app/main.py` by default. When a browser front end calls 
 
 FastAPI exposes `/docs` and `/redoc`. For a public API you may **disable** or **protect** them (reverse proxy, env flag, or mounting conditionally) so internal schemas are not trivially browsable.
 
+**In code:** set **`SMARTTICKET_DISABLE_OPENAPI`** to **`1`**, **`true`**, or **`yes`** — `app.main` passes `docs_url=None`, `redoc_url=None`, `openapi_url=None` (`app.core.config.fastapi_documentation_kwargs`). See **`.env.example`**.
+
 ### Privacy (PII)
 
 `POST /predict` returns the same `text` in the response for traceability. Logging proxies or APM tools may then store customer content twice; align retention and redaction with your policy.
@@ -63,6 +67,7 @@ When that URL comes from **`st.secrets`**, or from **env on Streamlit Community 
 | Max `text` length (HTTP + training row filter) | `app/core/limits.py` → `MAX_TICKET_TEXT_CHARS` |
 | Database URL (never commit real credentials) | Env **`DATABASE_URL`** · template **`/.env.example`** |
 | LLM vs human routing threshold | **`SMARTTICKET_LLM_MIN_SCORE`** · `app/core/triage_settings.py` |
+| Hide OpenAPI / Swagger in production | **`SMARTTICKET_DISABLE_OPENAPI`** · `app/core/config.py` → `app/main.py` |
 
 
 Tuning the limit: change the constant, run tests, and update `api-contracts.md` if the documented number is mentioned explicitly.

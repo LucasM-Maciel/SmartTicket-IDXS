@@ -165,6 +165,8 @@ GET /tickets
 
 Handles:
 
+- **Inference / UX:** **`load_dotenv()`** in **`app/main.py`**; **FastAPI `lifespan`** runs **`ensure_nltk_stopwords()`** so NLTK stopwords exist in slim images (see **`docs/security-and-deployment.md`**); errors do not block startup
+- **OpenAPI / Swagger:** by default **`/docs`**, **`/redoc`**, and the OpenAPI JSON are on; in production set **`SMARTTICKET_DISABLE_OPENAPI`** — see **`.env.example`** and **`docs/security-and-deployment.md`**
 - Input validation
 - Classification via `app/services/classifier.classify_ticket` (wraps `predict_category`)
 - **Triage:** `app/services/ticket_triage.triage_prediction` → **`urgency`** (category map) + **`queue_target`** (score vs `get_llm_min_score()` / **`SMARTTICKET_LLM_MIN_SCORE`**)
@@ -178,7 +180,7 @@ Handles:
 
 - **PostgreSQL** in deployments via **`DATABASE_URL`** (SQLAlchemy + `psycopg2-binary`; see `app/db/session.py`, `app/db/models.py`)
 - **`tickets` table:** includes **`urgency`** (`HIGH`/`MEDIUM`/`LOW`) and **`queue_target`** (`human`/`llm`), plus raw/processed text, category, score, status, `created_at`
-- **Tests:** root **`conftest.py`** → **`sqlite_session_factory`** (SQLite + `Base.metadata.create_all`) shared by persistence and queue tests; **`DATABASE_URL`** cleared **autouse** so local `.env` never hits CI-style runs
+- **Tests:** root **`conftest.py`** → **`sqlite_session_factory`** (SQLite + `Base.metadata.create_all`) shared by persistence and queue tests; **`DATABASE_URL`** cleared **`autouse`**; **`reset_db_engine_state()`** at **fixture start and end** so the SQLAlchemy engine singleton never leaks Postgres config between tests
 
 - **Read path:** **`GET /tickets`** (queue order + filters) — `app/db/queue_repository.py`
 

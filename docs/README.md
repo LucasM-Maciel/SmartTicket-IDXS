@@ -8,7 +8,7 @@
 |----------|---------|
 | `project-context.md` | MVP scope, dev order, **technical MVP closed** (02/05/2026), future planning |
 | `branch-feature-api-mvp-vs-develop.md` | API MVP + persistence delta vs older `develop` (historical merge aid) |
-| `api-contracts.md` | `GET /health` + `POST /predict` + **`GET /tickets`** + env (`DATABASE_URL`, `SMARTTICKET_*`, triage) |
+| `api-contracts.md` | `GET /health` + `POST /predict` + **`GET /tickets`** + env (`DATABASE_URL`, `SMARTTICKET_*`, triage, optional **`SMARTTICKET_DISABLE_OPENAPI`**) |
 | `security-and-deployment.md` | MVP hardening, artifact safety, production run notes |
 | *Checklists* | **Technical / functional / final product MVP** — [README (Checklists section)](../README.md#smartticket-mvp-checklists) |
 | `architecture.md` | Layers, **`tickets`** schema, **`db/migrations/`** |

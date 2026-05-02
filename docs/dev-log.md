@@ -48,7 +48,7 @@
 
 ### Solutions
 - Non-string inputs return empty string in both functions — safe for the pipeline and avoids constant exceptions
-- `LookupError` caught on NLTK corpus load: prints download instructions and returns empty string gracefully
+- `LookupError` on NLTK stopwords: log + **passthrough** (return input text without removing stopwords); see current `app/utils/normalizer.py` and startup `ensure_nltk_stopwords` in `app/core/nltk_bootstrap.py`
 
 ### Learnings
 - Regex is more powerful than expected — learned new patterns during implementation
