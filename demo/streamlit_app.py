@@ -16,6 +16,13 @@ import streamlit as st
 DEFAULT_API_BASE = "http://127.0.0.1:8000"
 REQUEST_TIMEOUT_S = 30
 
+SYNTHETIC_DATA_DISCLAIMER = (
+    "The model was trained on **synthetic data**, so **scores are often low** and labels may look "
+    "off—that is expected in this demo. The **technical MVP** validated **system behaviour** "
+    "(pipeline → triage → queues). **Accuracy and calibration** will be a **first focus** of the "
+    "**functional MVP**, using real or representative data."
+)
+
 # Main-panel onboarding — English copy aligned with widget labels below.
 TUTORIAL_MARKDOWN = """
 ### What this is
@@ -23,6 +30,21 @@ TUTORIAL_MARKDOWN = """
 This page is a **demo**: whatever you type is sent to the **SmartTicket API** (your deployed backend,
 e.g. on Railway). There the **full pipeline** runs (text cleaning, NLTK stopwords when available,
 classification model) and **triage** decides urgency and **human** vs **LLM** routing.
+
+---
+
+### Disclaimer — synthetic training data
+
+The classifier was trained on a **synthetic** dataset. **Confidence scores tend to be low** and
+categories may not match real-world wording—that is **not** a bug in this milestone; it reflects
+limited training signal.
+
+The **technical MVP** existed to **validate behaviour**: preprocessing, ML inference, urgency rules,
+routing (`human` vs `llm`), database persistence, and **queue ordering**. **Prediction quality**
+(precision/recall, score calibration) is **out of scope** for that closure.
+
+For the **functional MVP**, **improving model quality with real tickets** (or high-fidelity data)
+will be **one of the first things we tackle**—before relying on scores for operational decisions.
 
 ---
 
@@ -226,6 +248,7 @@ def main() -> None:
         "Tickets are classified on the API, triaged (urgency + queue), persisted, "
         "and listed below in **API queue order**."
     )
+    st.info(SYNTHETIC_DATA_DISCLAIMER)
 
     with st.expander("📖 How to use this demo", expanded=False):
         st.markdown(TUTORIAL_MARKDOWN)
