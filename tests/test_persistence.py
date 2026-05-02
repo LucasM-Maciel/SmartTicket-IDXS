@@ -4,34 +4,17 @@ from collections.abc import Generator
 
 import pytest
 from fastapi.testclient import TestClient
-from sqlalchemy import create_engine, select
+from sqlalchemy import select
 from sqlalchemy.exc import SQLAlchemyError
-from sqlalchemy.orm import Session, sessionmaker
+from sqlalchemy.orm import Session
 
 import app.api.routes as routes
 
-from app.db.models import Base, Ticket
+from app.db.models import Ticket
 from app.db.repository import save_ticket_prediction
 from app.db.session import get_db
 from app.main import app
 from app.services.classifier import ClassificationResult
-
-
-@pytest.fixture
-def sqlite_session_factory(tmp_path):
-    db_file = tmp_path / "persistence_tests.db"
-    engine = create_engine(
-        f"sqlite+pysqlite:///{db_file}",
-        future=True,
-        connect_args={"check_same_thread": False},
-    )
-    Base.metadata.create_all(engine)
-    factory = sessionmaker(bind=engine, autocommit=False, autoflush=False)
-    try:
-        yield factory
-    finally:
-        Base.metadata.drop_all(engine)
-        engine.dispose()
 
 
 def test_save_ticket_prediction_persists_row(sqlite_session_factory) -> None:
