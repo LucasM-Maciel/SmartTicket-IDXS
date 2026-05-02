@@ -11,10 +11,9 @@ scikit-learn
 joblib
 nltk
 
-# --- AI & LLM Integration ---
-# (For the Smart Ticket's automated response generation)
-openai
-langchain
+# --- AI & LLM (post-MVP) ---
+# Not used by the app yet (``app/services/llm_service.py`` is a stub). When you
+# implement it: pip install openai langchain  # or pin versions in this file.
 
 # --- Database & Persistence ---
 # (Support for SQL persistence and backend integration)
