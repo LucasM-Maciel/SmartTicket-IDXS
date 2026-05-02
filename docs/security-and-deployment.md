@@ -50,6 +50,10 @@ FastAPI exposes `/docs` and `/redoc`. For a public API you may **disable** or **
 
 **`GET /tickets`** returns **full** `text_raw` and `text_processed` for each row (same sensitivity as accepting them on `POST /predict`). The MVP ships **without** application-level auth: restrict access via **private network**, **API gateway**, or **TLS + credentials** aligned with your threat model before exposing the queue read API broadly.
 
+### Streamlit Community Cloud (`demo/streamlit_app.py`)
+
+The demo calls the FastAPI app **from Streamlit’s Python runtime** (server-side `requests`), so **CORS is not required** for this UI path. Configure the deployed API URL as **`SMARTTICKET_API_BASE_URL`** via **Streamlit app secrets** (dashboard) or local **`.streamlit/secrets.toml`** from **`secrets.toml.example`** — do **not** commit real URLs or tokens. The API host must be **reachable from the public internet** (Streamlit Cloud cannot use `127.0.0.1` on your machine). Prefer **HTTPS** for the API in line with the rest of this doc.
+
 ## Single source of truth
 
 | Topic | Where |

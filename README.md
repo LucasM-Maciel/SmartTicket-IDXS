@@ -292,6 +292,7 @@ The `text` field is capped for API safety; see `app/core/limits.py` and `docs/ap
 - **MVP slice (2026-04-11):** pipeline + training + `predict_category` is complete (DB persistence was out of scope for that slice only).
 - **API + persistence + triage + queue read:** `GET /health`, `POST /predict`, **`GET /tickets`** (ordered list + pagination + `queue_target` filter); **`urgency`** + **`queue_target`** in JSON + DB; **`SMARTTICKET_LLM_MIN_SCORE`** in `.env.example` (`app/core/triage_settings.py`, `app/services/ticket_triage.py`, `app/db/queue_repository.py`); SQL migration **`db/migrations/001_add_urgency_queue_target.sql`** for existing Postgres tables; tests **`test_queue_api.py`**
 - **Tests:** `test_ticket_triage.py`, `test_triage_settings.py`, plus `test_api` / `test_persistence` updates — see `docs/test-plan.md`
+- **Streamlit attendant demo:** `demo/streamlit_app.py` calls **`POST /predict`** and **`GET /tickets`** (server-side `requests` — no CORS needed for this UI). Local run and **[Streamlit Community Cloud](https://share.streamlit.io/)** setup (**Main file:** `demo/streamlit_app.py`, **Requirements file:** `demo/requirements.txt`, secret **`SMARTTICKET_API_BASE_URL`**) are in [`demo/README.md`](demo/README.md).
 
 ---
 
@@ -300,7 +301,7 @@ The `text` field is capped for API safety; see `app/core/limits.py` and `docs/ap
 - Merge ongoing feature branches to `develop` as PRs are approved (see `docs/branch-feature-api-mvp-vs-develop.md` when comparing historical deltas)
 - Real-world dataset sourcing (current dataset is synthetic)
 - Model evaluation with reliable data
-- Contacts/messages schema, **read/list queue API**, RabbitMQ workers, channels/UI (beyond `POST /predict` + triage flags)
+- Contacts/messages schema, **GET/PATCH ticket by id**, RabbitMQ workers, channels/product UI (beyond queue list + triage flags)
 
 ---
 
@@ -310,7 +311,7 @@ The `text` field is capped for API safety; see `app/core/limits.py` and `docs/ap
 - 🤖 LLM automatic resolution (with structured ML context)
 - ⚠️ **Priority aging** queue + **broker**-backed workers *(today: `queue_target` + `urgency` columns only)*
 - 📱 WhatsApp Business API integration (Z-API / Twilio)
-- 🖥️ Agent interface (Streamlit demo → React production)
+- 🖥️ Production agent interface (React / Next.js) — Streamlit demo lives under `demo/`
 - 🔁 Feedback loop + automatic model retraining (may include scheduled retrain jobs)
 - 📈 Monthly analytics report
 - ☁️ Cloud deployment
