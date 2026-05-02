@@ -24,10 +24,11 @@ Matches the **“Technical SmartTicket MVP”** diagram: a **modular FastAPI** o
 |------|------|
 | `GET /health` | Readiness: artifact *files* exist (paths from `app/core/config.py`, overridable via env — see *Conventions*). |
 | `POST /predict` | One-shot classification on a `text` string; returns `text` echo + `category` + `score` + `urgency` + `queue_target`. |
+| `GET /tickets` | Paginated queue read: tickets ordered by **urgency** tier (HIGH → MEDIUM → LOW), then **FIFO** by `created_at`; optional `queue_target` filter (`human` / `llm`). |
 
 Optional later without changing the diagram’s core story: `GET /version` (debug only).
 
-**Status codes you care about first:** **200** on success, **422** on invalid body (including `text` over the max length), **503** when not ready to infer (missing artifacts), when the database is not configured for persistence, or when a DB write fails — see each route below.
+**Status codes you care about first:** **200** on success; **422** on invalid body or query (e.g. `text` over max length, invalid `queue_target`); **503** when not ready to infer (missing artifacts), when the database is not configured, or when a DB read/write fails — see each route below.
 
 ---
 
@@ -94,6 +95,32 @@ Optional later without changing the diagram’s core story: `GET /version` (debu
 
 ---
 
+## `GET /tickets` (technical MVP)
+
+**Purpose:** Read persisted tickets in **service queue order**: urgency tier first (**HIGH**, then **MEDIUM**, then **LOW**), then oldest **`created_at`** first within the same tier. Uses read-only SQL (`app/db/queue_repository.py`).
+
+### Query parameters
+
+| Parameter | Default | Notes |
+|-----------|---------|------|
+| `queue_target` | *(omit)* | If `human` or `llm`, only tickets with that routing flag. |
+| `limit` | `50` | Page size, **1–100**. |
+| `offset` | `0` | Rows to skip (pagination). |
+
+### Response (200)
+
+JSON object with **`items`** (array of ticket rows), **`total`** (matching rows for the filter, before pagination), **`limit`**, **`offset`**.
+
+Each item includes: `id`, `text_raw`, `text_processed`, `category`, `score`, `urgency`, `queue_target`, `status`, `created_at`.
+
+### Errors
+
+- **`DATABASE_URL` unset:** **503** — `Database persistence not configured.`
+- **DB query failure:** **503** — `Could not load tickets; database unavailable.`
+- **Invalid `queue_target`** (not `human` / `llm`): **422** validation error.
+
+---
+
 ## Conventions (technical MVP)
 
 - **Content-Type** for request bodies: `application/json` unless noted.
@@ -103,7 +130,7 @@ Optional later without changing the diagram’s core story: `GET /version` (debu
 
   | Variable | Role |
   |----------|------|
-  | `DATABASE_URL` | PostgreSQL URL for SQLAlchemy (**required** at runtime for successful `POST /predict`; see `.env.example`) |
+  | `DATABASE_URL` | PostgreSQL URL for SQLAlchemy (**required** at runtime for **`POST /predict`** and **`GET /tickets`**; see `.env.example`) |
   | `SMARTTICKET_LLM_MIN_SCORE` | Score threshold in **[0, 1]** (clamped); `score >=` value → `queue_target: "llm"`, else `"human"` — default **0.75** if unset/invalid (`app/core/triage_settings.py`) |
   | `SMARTTICKET_MODEL_PATH` | Trained model `.pkl` |
   | `SMARTTICKET_VECTORIZER_PATH` | Vectorizer `.pkl` |
@@ -118,7 +145,7 @@ The following are **not** required to validate the **technical** diagram end-to-
 | Area | Path(s) (illustrative) | Notes |
 |------|------------------------|--------|
 | Inbound WhatsApp / BSP | `POST /webhooks/{provider}` (TBD) | Body depends on Z-API, Twilio, Meta, etc. |
-| Tickets (attendant) | `GET/POST /tickets`, `GET/PATCH /tickets/{id}` | Needs PostgreSQL and auth decisions |
+| Tickets (attendant) | `GET /tickets` ✅ MVP queue read · `GET/PATCH /tickets/{id}` | List/detail/patch for agents; **auth** still product backlog |
 | Outbound to WhatsApp | Outbound **HTTP from backend** to provider | Usually **not** a public route on your API |
 
 **Optional:** `GET /version` — return `{ "name": "…", "version": "…" }` aligned with `app/main.py`.

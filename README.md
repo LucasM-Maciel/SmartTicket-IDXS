@@ -152,6 +152,7 @@ User message
 ```http
 GET /health
 POST /predict
+GET /tickets
 ```
 
 Handles:
@@ -160,6 +161,7 @@ Handles:
 - Classification via `app/services/classifier.classify_ticket` (wraps `predict_category`)
 - **Triage:** `app/services/ticket_triage.triage_prediction` → **`urgency`** (category map) + **`queue_target`** (score vs `get_llm_min_score()` / **`SMARTTICKET_LLM_MIN_SCORE`**)
 - **Persistence:** inserts one **`tickets`** row (incl. `urgency`, `queue_target`) when `DATABASE_URL` is set — otherwise **`POST /predict`** returns **503**
+- **`GET /tickets`:** read-only queue listing via **`app/db/queue_repository.list_tickets_queue`** — urgency tier order (**HIGH** → **MEDIUM** → **LOW**), then **`created_at` ASC**; optional `queue_target` filter; pagination (`limit` 1–100, `offset`)
 - Response formatting
 
 ---
@@ -168,9 +170,11 @@ Handles:
 
 - **PostgreSQL** in deployments via **`DATABASE_URL`** (SQLAlchemy + `psycopg2-binary`; see `app/db/session.py`, `app/db/models.py`)
 - **`tickets` table:** includes **`urgency`** (`HIGH`/`MEDIUM`/`LOW`) and **`queue_target`** (`human`/`llm`), plus raw/processed text, category, score, status, `created_at`
-- **Tests:** SQLite file DB via dependency overrides (`tests/test_persistence.py`) — no impact from a developer’s local `.env` thanks to `conftest.py` clearing `DATABASE_URL`
+- **Tests:** root **`conftest.py`** → **`sqlite_session_factory`** (SQLite + `Base.metadata.create_all`) shared by persistence and queue tests; **`DATABASE_URL`** cleared **autouse** so local `.env` never hits CI-style runs
 
-Contacts/messages schema and read/query APIs remain **planned** (see `docs/architecture.md`).
+- **Read path:** **`GET /tickets`** (queue order + filters) — `app/db/queue_repository.py`
+
+Contacts/messages schema, **`PATCH` / per-ticket detail**, and channel ingestion remain **planned** (see `docs/architecture.md`).
 
 ---
 
@@ -184,7 +188,8 @@ Each interaction may store:
 - Processed text
 - Predicted category
 - Confidence score
-- *(Future)* Priority
+- **Urgency tier** and **`queue_target`** (routing flag)
+- *(Future)* Numeric priority aging / manual overrides
 - *(Future)* LLM-generated response
 - Timestamps and metadata
 - *(Future)* Human-validated outcomes
@@ -285,7 +290,7 @@ The `text` field is capped for API safety; see `app/core/limits.py` and `docs/ap
 - 🧪 Pytest coverage for preprocessing, normalizer, pipeline, training, and `predict_category` (`tests/` — strategy in `docs/test-plan.md`, tips in `tests/best_practices.md`)
 - Test runners `scripts/retest.ps1` / `scripts/retest.bat` — invoke pytest from repo root (see `scripts/retest.md`)
 - **MVP slice (2026-04-11):** pipeline + training + `predict_category` is complete (DB persistence was out of scope for that slice only).
-- **API + persistence + triage:** `GET /health`, `POST /predict` with **`urgency`** + **`queue_target`** in JSON + DB; **`SMARTTICKET_LLM_MIN_SCORE`** in `.env.example` (`app/core/triage_settings.py`, `app/services/ticket_triage.py`); SQL migration **`db/migrations/001_add_urgency_queue_target.sql`** for existing Postgres tables
+- **API + persistence + triage + queue read:** `GET /health`, `POST /predict`, **`GET /tickets`** (ordered list + pagination + `queue_target` filter); **`urgency`** + **`queue_target`** in JSON + DB; **`SMARTTICKET_LLM_MIN_SCORE`** in `.env.example` (`app/core/triage_settings.py`, `app/services/ticket_triage.py`, `app/db/queue_repository.py`); SQL migration **`db/migrations/001_add_urgency_queue_target.sql`** for existing Postgres tables; tests **`test_queue_api.py`**
 - **Tests:** `test_ticket_triage.py`, `test_triage_settings.py`, plus `test_api` / `test_persistence` updates — see `docs/test-plan.md`
 
 ---
@@ -342,7 +347,7 @@ Planned metrics:
 | ✅ | **Preprocessing** (pipeline) | `clean_text` → `normalize_text` → `run_pipeline` |
 | ✅ | **Prediction model** — classification + *score* | `predict_category`, TF-IDF + logistic regression; `joblib` artifacts |
 | ✅ | **Urgency** in the API flow → persist with classification + *score* | Rule-based **`HIGH`/`MEDIUM`/`LOW`** from category (`ticket_triage.py`); stored + returned in **`POST /predict`** |
-| ⬜ | **Priority queue** (ordered processing / broker) | **Not** a worker queue yet — **`queue_target`** is a routing flag; RabbitMQ / aging **planned** |
+| ✅ | Read **`GET /tickets`** (queue order + filter + pagination) | `list_tickets_queue` — **503** if DB down/missing |
 | ✅ | **PostgreSQL** — persist *ticket* + classification + *score* + triage fields | Includes **`urgency`**, **`queue_target`**; use migration **`db/migrations/001_...sql`** if upgrading an old DB |
 | ✅ | Limits, tests, security and contract docs | `app.core.limits`, **`test_ticket_triage`**, **`test_triage_settings`**, `test_api`, `test_persistence`; `docs/security-and-deployment.md` |
 
@@ -363,11 +368,11 @@ As in the diagrams: **Ticket owner** (WhatsApp) → **WhatsApp API (BSP)** / **w
 | Done | Deliverable | Notes |
 |:-----:|------------|--------|
 | ⬜ | **Ingress** — WhatsApp app → **BSP** → **webhook** → **load balancer** → tickets into ingestion | Not in the repo yet |
-| ⬜ | **API SmartTicket Ingestion** (orchestrates: model, LLM, queue, persistence, UI) | Today: partial core = FastAPI with `GET /health` and `POST /predict` (no webhooks, no channel integration) |
+| ⬜ | **API SmartTicket Ingestion** (orchestrates: model, LLM, queue, persistence, UI) | Today: partial core = FastAPI with `GET /health`, `POST /predict`, **`GET /tickets`** (queue list); no webhooks / channel integration |
 | ⬜ | **Prediction model** — pipeline; **classification + *score***; urgency in product diagrams | **Urgency** is **rule-based** from category (not second model head); **entity extraction** not implemented |
 | ⬜ | **LLM provider** (OpenAI / Anthropic, etc.) — *Raw ticket* + *score* / classification (context) → **LLM response** | ML+LLM hybrid planned; not integrated in code |
 | ⬜ | **Queue & scheduling** — *Postgres* + **APScheduler** (or multi-queue logic) — *prioritized by urgency score* | **`queue_target`** flag persisted; **no** worker / aging loop |
-| ⬜ | **DB** — *read*; *write* … + agent reply | **Write** path includes classify + triage fields; **list/read** APIs + attendant messages **open** |
+| ⬜ | **DB** — *read*; *write* … + agent reply | **Write** path includes classify + triage fields; **`GET /tickets`** (ordered queue + filter + pagination); **per-ticket detail / patch** + attendant messages **open** |
 | ⬜ | **UI** — *SmartTicket Interface Beta*; **agent**; *data consuming* from Ingestion | Not in the repo |
 | ⬜ | **User response** — *LLM* or agent (and *status* / *feedback* to the ticket owner) | Out of scope for the current MVP |
 
@@ -377,7 +382,7 @@ As in the diagrams: **Ticket owner** (WhatsApp) → **WhatsApp API (BSP)** / **w
 - [ ] Ingestion API end-to-end (today: isolated HTTP *predict* only)
 - [x] Model path: classification + *score* + **urgency** (rule-based) + **`queue_target`** in API + persistence
 - [ ] Queue: *Postgres* + *APScheduler* (or equivalent) — **workers** processing by urgency
-- [ ] **PostgreSQL:** read APIs + agent replies + full product schema
+- [ ] **PostgreSQL:** read APIs beyond **`GET /tickets`** + agent replies + full product schema
 - [ ] **UI** (agent, Interface Beta) + data consumption from Ingestion
 - [ ] **LLM:** request with ticket + context (*score* / classification) → response
 - [ ] Close the loop: response or *feedback* to the **ticket owner** (LLM and/or agent)
@@ -392,7 +397,7 @@ Step beyond functional MVP: **two services** (ingest vs. query), an explicit **R
 | ⬜ | **API SmartTicket Ingestion** (container) — *Tickets* → model, queue, DB; write: persist *ticket* + *classification* + *score* + *urgency*; *persist attendant messages* (label variants in diagrams) | `POST /predict` + triage persistence; **no** containerized channel ingress |
 | ⬜ | **Prediction model** in the path (preprocessing ↔ classification, *score*, urgency) | **Urgency** via **`ticket_triage`** rules, not extra model head |
 | ⬜ | **Priority queue (RabbitMQ)** — *Urgency* in → *prioritized by urgency* out, wired to Ingestion | In final-product diagrams; not in the repo |
-| ⬜ | **PostgreSQL** — full *read* / *write*: ticket, classification, *score*, urgency, work queue, messages; *Write: messages / LLM draft / attendant reply* (persistence/egress path) | **Classify + triage** writes done; **messages** + read APIs still open — see `docs/architecture.md` |
+| ⬜ | **PostgreSQL** — full *read* / *write*: ticket, classification, *score*, urgency, work queue, messages; *Write: messages / LLM draft / attendant reply* (persistence/egress path) | **Classify + triage** writes done; **`GET /tickets`** (queue) done; **messages** + detail/patch reads still open — see `docs/architecture.md` |
 | ⬜ | **API SmartTicket Query** (container) — DB read, **LLM** (*raw ticket* + *score* + *classification* as context → *LLM response*), *Data consuming* for the **UI** | Query API separate from ingestion |
 | ⬜ | **UI** — *SmartTicket Interface* (purple layer); agent; consumes **Query** (not Ingestion alone) | Front end not in the repo |
 | ⬜ | **Operations** — Docker (both services), *secrets*, observability, *hardening*; align with `docs/security-and-deployment.md` and product vision | See docs for detail |

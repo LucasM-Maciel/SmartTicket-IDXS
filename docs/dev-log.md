@@ -193,6 +193,21 @@
 
 ---
 
+## 2026-04-11 (Lucas)
+
+### What was done
+- **Queue read API:** **`GET /tickets`** — query params **`queue_target`** (optional), **`limit`**, **`offset`**; ordering via **`list_tickets_queue`** (**HIGH** → **MEDIUM** → **LOW**, then **`created_at`** ASC); responses **`TicketQueueItem`** / **`TicketQueueResponse`**; errors **503** (no DB / query failure), **422** (invalid **`queue_target`**).
+- **Tests:** **`tests/test_queue_api.py`**; root **`conftest.py`** — **`sqlite_session_factory`** shared with persistence-style overrides.
+- **Docs sync:** **`README.md`** (features + MVP checklists), **`docs/architecture.md`** (queue read path), **`docs/ml-notes.md`**, **`docs/test-plan.md`** (§4.8), **`docs/branch-feature-api-mvp-vs-develop.md`**, **`docs/README.md`** index; **`docs/project-context.md`** / **`docs/api-contracts.md`** / **`docs/security-and-deployment.md`** already described **`GET /tickets`** — cross-checked.
+
+### Problems
+- None blocking.
+
+### Next Steps
+- Ticket **detail** / **PATCH**, auth, and product schema for messages / agent replies.
+
+---
+
 ## 2026-04-24 (Lucas)
 
 ### What was done
@@ -204,7 +219,7 @@
 - `POST /predict` runs inference before failing when **`DATABASE_URL`** is missing — documented behavior (potential refactor later).
 
 ### Next Steps
-- **`GET` queue** API + integration tests; **Alembic** or more SQL migrations as schema grows; optional inference-before-DB reorder
+- **Alembic** or more SQL migrations as schema grows; optional inference-before-DB reorder.
 
 ---
 
@@ -220,5 +235,6 @@
 - None blocking.
 
 ### Next Steps
-- **`GET` / list queue** ordered by urgency tier + `created_at` (per `project-context` PR 2).
+- Ticket **detail** / **PATCH**, auth, **`GET /tickets`** extensions as product needs (filters beyond **`queue_target`**) — queue list shipped in **2026-04-11** entry.
 
+---

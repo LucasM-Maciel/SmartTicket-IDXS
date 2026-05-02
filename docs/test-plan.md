@@ -26,7 +26,7 @@ The system should be tested in layers:
 1. **Utils layer** → text cleaning and normalization
 2. **ML layer** → prediction behavior and model outputs
 3. **Service layer** → end-to-end pipeline logic
-4. **API layer** → request/response validation
+4. **API layer** → request/response validation (`test_api.py`), queue read (`test_queue_api.py`)
 5. **Future integrations** → LLM, WhatsApp webhooks *(DB persistence tests live in `test_persistence.py`)*
 
 ---
@@ -552,6 +552,26 @@ Ensure API returns JSON correctly.
 
 * response content type is JSON
 * payload is parseable
+
+---
+
+## 4.8 Queue read API (`test_queue_api.py`)
+
+**Priority:** P0 for attendant-facing queue correctness
+
+### Objective
+
+Cover **`GET /tickets`**: SQL ordering (**HIGH** → **MEDIUM** → **LOW**, then **`created_at`** ascending), optional **`queue_target`** filter (**`human`** / **`llm`**), pagination (**`limit`**, **`offset`**, **`total`**), and error paths (**503** without DB / failed query; **422** for invalid **`queue_target`**).
+
+### Validate
+
+* a **HIGH** ticket appears before a **LOW** ticket even when the LOW row is older
+* within the same urgency tier, older **`created_at`** appears first (FIFO)
+* **`queue_target`** query restricts results; invalid enum returns **422**
+* **503** when persistence is unavailable
+* response shape matches **`TicketQueueResponse`** (items + pagination fields)
+
+Implementation uses **`sqlite_session_factory`** from root **`conftest.py`** to inject **`get_db`**.
 
 ---
 

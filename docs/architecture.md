@@ -77,7 +77,19 @@ HTTP POST /predict
 → PredictResponse JSON
 ```
 
-**Dependency injection:** `get_db()` yields a SQLAlchemy `Session` when **`DATABASE_URL`** is set; otherwise **`None`**. After **`classify_ticket`** completes, if there is no session the handler returns **503** (`Database persistence not configured.`) — so inference runs even when persistence is off (consider reordering in a future refactor if you want to skip model load). Tests override `get_db` or use SQLite (`tests/test_persistence.py`). Root **`conftest.py`** clears `DATABASE_URL` during pytest so local `.env` never leaks into CI-style runs.
+### Queue read (`GET /tickets` — as implemented)
+
+```text
+HTTP GET /tickets?queue_target=&limit=&offset=
+→ Pydantic validation (queue_target optional enum; limit/offset bounds)
+→ list_tickets_queue(session, queue_target, limit, offset)  # app/db/queue_repository.py
+→ SELECT … ORDER BY urgency tier (HIGH → MEDIUM → LOW), created_at ASC
+→ TicketQueueResponse JSON (items + total + limit + offset)
+```
+
+If **`get_db`** yields **`None`** (**`DATABASE_URL`** unset), the handler returns **503** (`Database persistence not configured.`). If **`list_tickets_queue`** raises **`SQLAlchemyError`**, it returns **503** (`Could not load tickets; database unavailable.`). **`422`** is returned for an invalid **`queue_target`** query value. Integration tests: **`tests/test_queue_api.py`** (uses **`sqlite_session_factory`** from root **`conftest.py`**).
+
+**Dependency injection:** `get_db()` yields a SQLAlchemy `Session` when **`DATABASE_URL`** is set; otherwise **`None`**. After **`classify_ticket`** completes, if there is no session the handler returns **503** (`Database persistence not configured.`) — so inference runs even when persistence is off (consider reordering in a future refactor if you want to skip model load). Tests override `get_db` or use SQLite (`tests/test_persistence.py`, **`tests/test_queue_api.py`**). Root **`conftest.py`** clears `DATABASE_URL` during pytest so local `.env` never leaks into CI-style runs.
 
 ---
 

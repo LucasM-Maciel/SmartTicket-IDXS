@@ -22,7 +22,7 @@ Inference loads `model.pkl` and `vectorizer.pkl` with `joblib.load()`. Unpicklin
 
 ### Authentication and rate limiting
 
-The MVP API has **no** API key or OAuth on `POST /predict` by design until you need it. If the service is exposed to the public internet, add at least one of: **network restriction**, **API gateway rate limits**, or **application-level auth**.
+The MVP API has **no** API key or OAuth on **`POST /predict`**, **`GET /tickets`**, or **`GET /health`** by design until you need it. If the service is exposed to the public internet, add at least one of: **network restriction**, **API gateway rate limits**, or **application-level auth**.
 
 ### Error responses in production
 
@@ -47,6 +47,8 @@ FastAPI exposes `/docs` and `/redoc`. For a public API you may **disable** or **
 ### Privacy (PII)
 
 `POST /predict` returns the same `text` in the response for traceability. Logging proxies or APM tools may then store customer content twice; align retention and redaction with your policy.
+
+**`GET /tickets`** returns **full** `text_raw` and `text_processed` for each row (same sensitivity as accepting them on `POST /predict`). The MVP ships **without** application-level auth: restrict access via **private network**, **API gateway**, or **TLS + credentials** aligned with your threat model before exposing the queue read API broadly.
 
 ## Single source of truth
 
