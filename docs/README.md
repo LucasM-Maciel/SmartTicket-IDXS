@@ -6,7 +6,7 @@
 
 | Document | Purpose |
 |----------|---------|
-| `project-context.md` | MVP scope, dev order, future technical planning |
+| `project-context.md` | MVP scope, dev order, **technical MVP closed** (02/05/2026), future planning |
 | `branch-feature-api-mvp-vs-develop.md` | API MVP + persistence delta vs older `develop` (historical merge aid) |
 | `api-contracts.md` | `GET /health` + `POST /predict` + **`GET /tickets`** + env (`DATABASE_URL`, `SMARTTICKET_*`, triage) |
 | `security-and-deployment.md` | MVP hardening, artifact safety, production run notes |

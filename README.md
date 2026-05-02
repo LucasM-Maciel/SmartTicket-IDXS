@@ -12,6 +12,14 @@
 
 The **Intelligent Triage System** is a production-oriented application designed to process and understand unstructured text data such as support tickets, user requests, and operational messages.
 
+### Project status — **Technical MVP (agreed scope) is complete** (02/05/2026)
+
+The scope in [`docs/project-context.md`](docs/project-context.md) (**Technical MVP closure**) is **done** as of **02 May 2026**: `GET /health`, **`POST /predict`** with PostgreSQL persistence, **`urgency` / `queue_target`**, **`GET /tickets`** (queue order, `queue_target` filter, pagination), SQL migration for existing DBs, and tests (`test_api`, `test_persistence`, `test_queue_api`, triage tests). **Functional / product MVP** (WhatsApp, attendant UI, RabbitMQ workers, LLM customer reply path) is **not** part of this closed milestone.
+
+**Novidades que fecham o MVP técnico:** endpoint **`GET /tickets`**, repositório **`queue_repository`**, schemas de fila, **`test_queue_api.py`** + **`sqlite_session_factory`** no `conftest.py` — detalhes em `docs/project-context.md` (*What is new*).
+
+---
+
 It combines:
 
 - 🧠 **Machine Learning** → structured classification
@@ -291,7 +299,7 @@ The `text` field is capped for API safety; see `app/core/limits.py` and `docs/ap
 - Test runners `scripts/retest.ps1` / `scripts/retest.bat` — invoke pytest from repo root (see `scripts/retest.md`)
 - **MVP slice (2026-04-11):** pipeline + training + `predict_category` is complete (DB persistence was out of scope for that slice only).
 - **API + persistence + triage + queue read:** `GET /health`, `POST /predict`, **`GET /tickets`** (ordered list + pagination + `queue_target` filter); **`urgency`** + **`queue_target`** in JSON + DB; **`SMARTTICKET_LLM_MIN_SCORE`** in `.env.example` (`app/core/triage_settings.py`, `app/services/ticket_triage.py`, `app/db/queue_repository.py`); SQL migration **`db/migrations/001_add_urgency_queue_target.sql`** for existing Postgres tables; tests **`test_queue_api.py`**
-- **Tests:** `test_ticket_triage.py`, `test_triage_settings.py`, plus `test_api` / `test_persistence` updates — see `docs/test-plan.md`
+- **Tests:** `test_ticket_triage.py`, `test_triage_settings.py`, `test_queue_api.py`, plus `test_api` / `test_persistence` — see `docs/test-plan.md`
 - **Streamlit demo:** [`demo/README.md`](demo/README.md) — **Main file** `demo/streamlit_app.py`, Cloud **requirements** `demo/requirements.txt`, secret **`SMARTTICKET_API_BASE_URL`**.
 
 ---
@@ -336,7 +344,7 @@ Planned metrics:
 <a id="smartticket-mvp-checklists"></a>
 ## 📋 Checklists: Technical MVP · Functional MVP · Final product
 
-> **Key (GitHub):** the *Done* column uses ✅/⬜; lines with `- [ ]` / `- [x]` are native *task lists* (renders as checkboxes in the repository view). Target database: **PostgreSQL**. **Technical MVP** — *Technical SmartTicket MVP* (flow: test dataset → modular API → pipeline → prediction → priority queue → DB). **Functional MVP** — *Smart Ticket Architecture* / *Functional MVP* (WhatsApp → *cloud* → Ingestion → model + LLM + queue + DB → UI). **Final product** — same diagram family, with **Ingest/Query** split, **RabbitMQ** for the queue, LLM, and clearer data consumption (current vision below); business/roadmap detail: `docs/product-vision-en.md` / `docs/product-vision-pt.md`.
+> **Key (GitHub):** the *Done* column uses ✅/⬜; lines with `- [ ]` / `- [x]` are native *task lists* (renders as checkboxes in the repository view). Target database: **PostgreSQL**. **Technical MVP** — *Technical SmartTicket MVP* (flow: test dataset → modular API → pipeline → prediction → priority queue → DB). **As of 02/05/2026**, the agreed Technical MVP checklist (first table under **1) Technical MVP**) is **complete** — see [`docs/project-context.md`](docs/project-context.md). **Functional MVP** — *Smart Ticket Architecture* / *Functional MVP* (WhatsApp → *cloud* → Ingestion → model + LLM + queue + DB → UI). **Final product** — same diagram family, with **Ingest/Query** split, **RabbitMQ** for the queue, LLM, and clearer data consumption (current vision below); business/roadmap detail: `docs/product-vision-en.md` / `docs/product-vision-pt.md`.
 
 ### 1) Technical MVP (*Technical SmartTicket MVP — diagram*)
 
@@ -344,18 +352,18 @@ Planned metrics:
 |:-----:|--------------|--------|
 | ✅ | **PostgreSQL** as the target RDBMS | `DATABASE_URL` + SQLAlchemy; table `tickets` (see `app/db/models.py`) |
 | ✅ | **Test dataset** (synthetic tickets / sample) | CSV + test requests with body `{"text": "…"}` on `POST /predict` |
-| ✅ | Modular **SmartTicket API** (FastAPI) | `GET /health`, `POST /predict` — see `docs/api-contracts.md` |
+| ✅ | Modular **SmartTicket API** (FastAPI) | `GET /health`, `POST /predict`, **`GET /tickets`** — see `docs/api-contracts.md` |
 | ✅ | **Preprocessing** (pipeline) | `clean_text` → `normalize_text` → `run_pipeline` |
 | ✅ | **Prediction model** — classification + *score* | `predict_category`, TF-IDF + logistic regression; `joblib` artifacts |
 | ✅ | **Urgency** in the API flow → persist with classification + *score* | Rule-based **`HIGH`/`MEDIUM`/`LOW`** from category (`ticket_triage.py`); stored + returned in **`POST /predict`** |
-| ✅ | Read **`GET /tickets`** (queue order + filter + pagination) | `list_tickets_queue` — **503** if DB down/missing |
+| ✅ | Read **`GET /tickets`** (queue order + filter + pagination) | `list_tickets_queue` — **503** if DB unavailable (not configured or query failure) |
 | ✅ | **PostgreSQL** — persist *ticket* + classification + *score* + triage fields | Includes **`urgency`**, **`queue_target`**; use migration **`db/migrations/001_...sql`** if upgrading an old DB |
-| ✅ | Limits, tests, security and contract docs | `app.core.limits`, **`test_ticket_triage`**, **`test_triage_settings`**, `test_api`, `test_persistence`; `docs/security-and-deployment.md` |
+| ✅ | Limits, tests, security and contract docs | `app.core.limits`, **`test_ticket_triage`**, **`test_triage_settings`**, **`test_api`**, **`test_persistence`**, **`test_queue_api`**; `docs/security-and-deployment.md` |
 
 **Task list (for Git/PRs; mirrors the table):**
 
 - [x] Test dataset + HTTP test calls (body with `text`)
-- [x] Modular FastAPI (`/health`, `/predict`)
+- [x] Modular FastAPI (`/health`, `/predict`, **`/tickets`**)
 - [x] Preprocessing
 - [x] Model: category + *confidence score*
 - [x] Urgency + **`queue_target`** in API + DB + response JSON (see `docs/api-contracts.md`)
