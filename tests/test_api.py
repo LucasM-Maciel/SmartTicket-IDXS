@@ -55,6 +55,8 @@ def test_post_predict_success(monkeypatch: pytest.MonkeyPatch, client: TestClien
     assert body["text"] == "I need help with my internet"
     assert body["category"] == "test_category"
     assert body["score"] == 0.99
+    assert body["urgency"] == "MEDIUM"
+    assert body["queue_target"] == "llm"
 
 
 def test_post_predict_validation_error(client: TestClient) -> None:

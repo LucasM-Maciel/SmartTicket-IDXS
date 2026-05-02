@@ -42,6 +42,8 @@ def test_save_ticket_prediction_persists_row(sqlite_session_factory) -> None:
             text_processed="customer asks cancellation",
             category="cancellation_request",
             score=0.91,
+            urgency="HIGH",
+            queue_target="llm",
         )
         db.commit()
         db.refresh(row)
@@ -51,6 +53,8 @@ def test_save_ticket_prediction_persists_row(sqlite_session_factory) -> None:
         assert persisted.text_raw == "Customer asks for cancellation"
         assert persisted.category == "cancellation_request"
         assert persisted.score == 0.91
+        assert persisted.urgency == "HIGH"
+        assert persisted.queue_target == "llm"
 
 
 def test_post_predict_persists_ticket_with_db_dependency(
@@ -86,6 +90,8 @@ def test_post_predict_persists_ticket_with_db_dependency(
     assert rows[0].text_raw == "I was billed twice"
     assert rows[0].text_processed == "billing issue processed"
     assert rows[0].category == "billing_inquiry"
+    assert rows[0].urgency == "LOW"
+    assert rows[0].queue_target == "llm"
 
 
 def test_post_predict_returns_503_and_rolls_back_when_commit_fails(
