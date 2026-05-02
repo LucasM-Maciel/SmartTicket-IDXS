@@ -1,24 +1,40 @@
-# Smart Ticket — Intelligent Ticket Triage System
+# Documentation index
 
-## Overview
-Smart Ticket is an intelligent ticket triage system that uses Machine Learning and LLMs to classify and respond to customer messages.
+**Project overview, setup, train/test commands, and roadmap:** see the [root README](../README.md).
 
-## Objective
-Receive unstructured text (customer messages) and:
-- classify the request (ML)
-- generate a response (LLM)
-- store data (SQL)
-- expose functionality via API
+## Core references
 
-## Tech Stack
-- Python
-- FastAPI
-- Pandas
-- Scikit-learn
-- SQL
-- LLM API
+| Document | Purpose |
+|----------|---------|
+| `project-context.md` | MVP scope, dev order, **technical MVP closed** (02/05/2026), future planning |
+| `branch-feature-api-mvp-vs-develop.md` | API MVP + persistence delta vs older `develop` (historical merge aid) |
+| `api-contracts.md` | `GET /health` + `POST /predict` + **`GET /tickets`** + env (`DATABASE_URL`, `SMARTTICKET_*`, triage, optional **`SMARTTICKET_DISABLE_OPENAPI`**) |
+| `security-and-deployment.md` | MVP hardening, artifact safety, production run notes |
+| *Checklists* | **Technical / functional / final product MVP** — [README (Checklists section)](../README.md#smartticket-mvp-checklists) |
+| `architecture.md` | Layers, **`tickets`** schema, **`db/migrations/`** |
+| `diagrams/README.md` | Excalidraw: share link + optional `*.excalidraw` in repo (zoom in browser) |
+| `adr/` | Architecture decision records (start with `0001-…`) |
+| `ml-notes.md` | ML implementation notes and dataset |
+| `test-plan.md` | Testing strategy |
+| `dev-log.md` | Chronological work log |
+| `team-responsibilities.md` | Ownership by person |
+| `git-workflow.md` | Branching and collaboration |
+| `reuniao-regras-negocio.md` | Business alignment (PT) |
+| `product-vision-en.md` / `product-vision-pt.md` | Full product vision |
 
-## Architecture (High-Level)
+## Demo UI (Streamlit)
 
-```text
-Input → API → Pipeline → ML → LLM → Database → Output
+- **[demo/README.md](../demo/README.md)** — run, Community Cloud, **`SMARTTICKET_API_BASE_URL`**. Security notes: **`docs/security-and-deployment.md`**.
+
+## Testing & scripts
+
+- Run tests: `scripts/retest.ps1` / `scripts/retest.bat` — details in `scripts/retest.md`
+- Manual DB persistence smoke (running API): `scripts/post_test_ticket.py`
+- Environment template (repo root): `/.env.example` — copy to `.env`, never commit secrets
+- Test tips: `tests/best_practices.md`
+- Script conventions: `scripts/best_practices.md`
+
+## Naming & editor
+
+- `naming-conventions.md`
+- `cursor-rules.md`

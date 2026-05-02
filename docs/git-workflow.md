@@ -32,6 +32,8 @@ main     → stable / production-ready
 develop  → integration branch (team work)
 ```
 
+**Docs:** Evolve `docs/architecture.md` and `docs/adr/` on **`develop`** (via `docs/*` or feature branches), then merge to **`main`** on release so the stable branch does not accumulate narrative-only drift.
+
 ---
 
 ## Working branches

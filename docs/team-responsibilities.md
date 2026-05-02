@@ -1,5 +1,8 @@
-```md
 # Team Responsibilities
+
+> **What is in the repo today:** The **current technical MVP** (preprocessing, ML, `app/api` on `feature/api-mvp`, `app/core`, `app/main.py`, tests, and the documentation that tracks it) is **solely Lucas’s work**. The sections below split **intended** ownership for **upcoming** work (persistence, broader backend, docs/UX support, reviews) — they do **not** mean those people have contributed code or docs to the MVP that is being merged now.
+
+---
 
 ## Lucas (Data, ML & Core Backend)
 
@@ -20,12 +23,14 @@
 - `app/utils/`
 - `app/ml/`
 - `app/services/pipeline.py`
-- ML integration inside API routes
-- `docs/ml-notes.md`
+- `app/api/` (routes, schemas — **implemented by Lucas** for the technical API MVP)
+- `app/core/` (config, limits — **implemented by Lucas**)
+- `app/main.py` (**implemented by Lucas**)
+- ML-related and API-contract documentation (`docs/ml-notes.md`, `docs/api-contracts.md`, etc.)
 
 ---
 
-## Salim (Tech Lead & Backend)
+## Salim (Tech Lead & Backend) — *no code in the current technical MVP*
 
 ### Main Responsibilities
 - FastAPI application structure
@@ -38,16 +43,16 @@
 - Ensuring integration between ML, API, and future components
 - Sprint planning and technical prioritization
 
-### Main Files / Areas
-- `app/api/`
+### Main Files / Areas (target — *no MVP code from Salim to date*)
+- `app/api/` (future: larger route surface, service layer with DB)
 - `app/core/`
-- `app/main.py`
+- `app/main.py` (future: CORS, lifespan, middleware)
 - Architecture decisions
 - Backend structure and standards
 
 ---
 
-## Rafael (Documentation, UX & Support)
+## Rafael (Documentation, UX & Support) — *not yet a contributor to the technical MVP*
 
 ### Main Responsibilities
 - Documentation (README, docs, usage guides)
@@ -68,7 +73,7 @@
 
 ---
 
-## Luís (Backend Support - Weekend Contributor)
+## Luís (Backend Support - Weekend Contributor) — *not yet a contributor to the technical MVP*
 
 ### Main Responsibilities
 - Backend code review
@@ -87,7 +92,7 @@
 
 ## Shared Responsibilities
 
-These responsibilities involve more than one team member:
+These responsibilities involve more than one team member (for **future** alignment — they are **not** shared deliverables on the current technical MVP, which is single-author):
 
 - Defining ticket categories
 - Reviewing architecture decisions
@@ -96,4 +101,3 @@ These responsibilities involve more than one team member:
 - Integration testing
 - Final delivery validation
 - Dataset understanding and refinement
-```

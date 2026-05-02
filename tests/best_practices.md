@@ -70,5 +70,3 @@ Tests help:
 * Detect issues early
 * Ensure reliability
 * Maintain consistency across the system
-
-```
