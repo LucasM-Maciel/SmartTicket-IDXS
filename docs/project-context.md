@@ -1,7 +1,7 @@
 # Project Context
 ## SmartTicket — Operational Intelligence Platform for Customer Support
 
-> Last updated: 2026-04-24
+> Last updated: 2026-05-02
 > Full product vision: see `docs/product-vision-pt.md` and `docs/product-vision-en.md`
 
 ---
@@ -109,6 +109,64 @@ Implemented on **`feature/api-mvp`** (merge history vs **`develop`**: **`branch-
 > Final count can easily exceed 10 categories depending on the business.
 > The model is retrained for each client's category configuration.
 
+**Refund vs cancellation:** both map to `HIGH` urgency in the MVP policy below; keeping separate classifier labels (`refund_request` vs `cancellation_request`) preserves analytics and playbooks even though urgency is the same.
+
+---
+
+## Technical MVP closure — planned implementation
+
+This section records **agreed scope** to finish the **technical MVP** after persistence: urgency, routing by confidence score, queue ordering, minimal read API, tests, and schema migration. All identifiers below are **English** in code and APIs.
+
+### Completion criteria
+
+Closing the technical MVP means merging **two focused PRs**:
+
+| PR | Branch name (suggested) | Scope |
+|---|---|---|
+| **1** | `feature/mvp-urgency-logic` | Urgency + human/LLM routing fields, persistence on `POST /predict`, migration, env thresholds, **unit tests** |
+| **2** | `feature/mvp-queue-api` | `GET` endpoint(s) for ordered queue + pagination/filters, **integration tests** on ordering |
+
+Optional later (does **not** block technical MVP closure): small **Streamlit** UI for collaborators to exercise the API — see note at end of Development Order.
+
+### Urgency levels (queue tiers)
+
+Three tiers, ordered for servicing: **`HIGH` → `MEDIUM` → `LOW`**.
+
+- **Between tiers:** work through **all `HIGH` tickets before any `MEDIUM`**, then all `MEDIUM` before **`LOW`** (strict tiered queue).
+- **Within the same tier:** **FIFO** by arrival — first ticket created in that tier is answered first (`created_at` ascending as tie-break).
+
+### Category → urgency (MVP)
+
+Deterministic mapping from **predicted category** (model output string must match training labels — normalize casing/spacing if needed):
+
+| Predicted category | Urgency |
+|---|---|
+| `technical_issue` | `MEDIUM` |
+| `product_inquiry` | `MEDIUM` |
+| `billing_inquiry` | `LOW` |
+| `refund_request` | `HIGH` |
+| `cancellation_request` | `HIGH` |
+
+Unknown or unexpected categories: define an explicit fallback (e.g. `MEDIUM` or `LOW`) in code and tests.
+
+### Human vs LLM routing (confidence split)
+
+Separate from urgency: route by **classification score** from `predict_category`:
+
+- **Low score** → **human** queue (low confidence in the predicted label).
+- **High score** → **LLM** queue (high confidence).
+
+Threshold(s) live in **environment variables** (e.g. a single `SMARTTICKET_LLM_MIN_SCORE`) with conservative defaults until real data calibration. Document in `.env.example`.
+
+### Explicitly **not** in technical MVP closure
+
+- **Priority aging** (e.g. `MEDIUM` promoting to `HIGH` after wait time).
+- **Manual urgency override** by agents (downgrade false alarms, etc.).
+- **Review queue** after LLM replies (human feedback / enrichment) — third workflow axis.
+- **RabbitMQ** — logical queue in PostgreSQL + API is enough for this milestone.
+
+These remain **product backlog** after the technical MVP ships.
+
 ---
 
 ## Development Order
@@ -128,15 +186,20 @@ Implemented on **`feature/api-mvp`** (merge history vs **`develop`**: **`branch-
 7. ✅ FastAPI routes — `GET /health`, `POST /predict` + Pydantic schemas *(merge into `develop` may lag — verify with git)*
 8. ✅ HTTP tests — `tests/test_api.py`, **`tests/test_persistence.py`** (`TestClient`, dependency overrides)
 9. ✅ Minimal **`tickets`** persistence (`DATABASE_URL`, SQLAlchemy) — contacts/messages/extended ticket columns **still open**
-10. ⏳ Full product E2E (channels → API → persist **→ reads/UI**, urgency, queue)
+10. ⏳ **Technical MVP closure** — urgency tiers, category mapping, score-based human/LLM routing, DB fields + migration, queue ordering, read API, tests (**details:** section *Technical MVP closure — planned implementation* above)
+11. ⏳ Full product E2E (channels → API → persist **→ reads/UI**, WhatsApp, etc.)
 
 ### Post-MVP
-11. ⏳ WhatsApp integration
-12. ⏳ Agent interface (Streamlit for demo, React for production)
-13. ⏳ LLM integration
-14. ⏳ Priority aging + queue
-15. ⏳ Feedback loop + automatic retraining
-16. ⏳ Monthly analytics report
+12. ⏳ WhatsApp integration
+13. ⏳ Agent interface (Streamlit for demo, React for production)
+14. ⏳ LLM integration (full response path beyond routing flags)
+15. ⏳ Priority aging + manual urgency overrides + review queue (LLM → human feedback)
+16. ⏳ Feedback loop + automatic retraining
+17. ⏳ Monthly analytics report
+
+### Note — optional validation UI before full product MVP
+
+Building a small **Streamlit** screen is optional to let collaborators test the pipeline and queue behavior; it is **not required** to close the technical MVP scope in *Technical MVP closure — planned implementation*.
 
 ---
 
