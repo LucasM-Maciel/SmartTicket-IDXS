@@ -27,7 +27,10 @@ The system should be tested in layers:
 2. **ML layer** → prediction behavior and model outputs
 3. **Service layer** → end-to-end pipeline logic
 4. **API layer** → request/response validation (`test_api.py`), queue read (`test_queue_api.py`)
-5. **Future integrations** → LLM, WhatsApp webhooks *(DB persistence tests live in `test_persistence.py`)*
+5. **App bootstrap** → NLTK stopwords at startup (`test_nltk_bootstrap.py`; details in **§6C**)
+6. **Config toggles** → FastAPI OpenAPI visibility (`test_fastapi_documentation_env.py`; **§6D**)
+7. **Persistence / DB** → `test_persistence.py` (details in **§8**)
+8. **Future integrations** → LLM, WhatsApp webhooks (**§7**, **§9**)
 
 ---
 
@@ -680,6 +683,38 @@ Cover **deterministic** urgency (**category → `HIGH`/`MEDIUM`/`LOW`**) and **`
 * known categories map to expected urgency tiers
 * score thresholds use **inclusive** boundary on LLM side where specified
 * **`get_llm_min_score`** falls back safely on bad env values
+
+---
+
+## 6C. NLTK bootstrap at API startup (`test_nltk_bootstrap.py`)
+
+**Priority:** P1 (deploy parity with training — stopwords corpus)
+
+### Objective
+
+Cover **`ensure_nltk_stopwords()`** (`app/core/nltk_bootstrap.py`): triggers **`nltk.download("stopwords")`** when the corpus is absent; **no-op** when already present; **never raises** if download fails (logs warning; normalizer may passthrough).
+
+### Validate
+
+* **`nltk.data.find`** raising **`LookupError`** leads to one **`download`** call with **`quiet=True`**
+* when **`find`** succeeds, **`download`** is not called
+* **`download`** raising (e.g. no network) does not propagate
+
+---
+
+## 6D. FastAPI OpenAPI toggle (`test_fastapi_documentation_env.py`)
+
+**Priority:** P1 (production hardening — avoid exposing schema UIs publicly)
+
+### Objective
+
+Cover **`fastapi_documentation_kwargs()`** (`app/core/config.py`): when **`SMARTTICKET_DISABLE_OPENAPI`** is truthy (**`1`**, **`true`**, **`yes`**, case-insensitive, surrounding whitespace ignored), the dict disables **`docs_url`**, **`redoc_url`**, and **`openapi_url`** for **`FastAPI(...)`** in **`app/main.py`**. Unset or other values leave documentation enabled (empty dict).
+
+### Validate
+
+* truthy env values yield the three **`None`** URLs
+* env unset → **`{}`**
+* non-truthy values (e.g. **`0`**) → **`{}`**
 
 ---
 

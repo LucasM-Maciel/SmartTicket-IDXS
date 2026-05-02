@@ -1,12 +1,16 @@
-"""ML artifact paths, dataset path, and CSV column names (training / inference).
+"""ML artifact paths, dataset path, CSV column names, and small env toggles.
 
 HTTP request bounds (e.g. max `text` length) live in ``app.core.limits``.
 
-Optional overrides (paths as strings, absolute or relative to process CWD):
+Optional path overrides (strings, absolute or relative to process CWD):
 
 - ``SMARTTICKET_MODEL_PATH``
 - ``SMARTTICKET_VECTORIZER_PATH``
 - ``SMARTTICKET_DATASET_PATH``
+
+Optional app assembly:
+
+- ``SMARTTICKET_DISABLE_OPENAPI`` — hide ``/docs``, ``/redoc``, OpenAPI JSON (see ``fastapi_documentation_kwargs``).
 """
 
 import os
@@ -36,3 +40,15 @@ DATASET_PATH: Final[Path] = _path_from_env(
 
 TEXT_COLUMN: Final[str] = "Ticket Description"
 LABEL_COLUMN: Final[str] = "Ticket Type"
+
+
+def fastapi_documentation_kwargs() -> dict[str, str | None]:
+    """Kwargs for ``FastAPI(...)`` to drop public schema UIs when env asks for it.
+
+    Truthy ``SMARTTICKET_DISABLE_OPENAPI``: ``1``, ``true``, ``yes`` (case-insensitive).
+    Default: empty dict — docs stay enabled for local development.
+    """
+    v = (os.environ.get("SMARTTICKET_DISABLE_OPENAPI") or "").strip().lower()
+    if v in ("1", "true", "yes"):
+        return {"docs_url": None, "redoc_url": None, "openapi_url": None}
+    return {}

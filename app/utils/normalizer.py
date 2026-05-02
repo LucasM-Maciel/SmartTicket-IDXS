@@ -12,13 +12,15 @@ def normalize_text(text: str, language: str = "english") -> str:
     try:
         stop_words = set(stopwords.words(language))
     except LookupError as e:
-        logger.error(
-            "NLTK stopwords unavailable for language %r: %s. "
+        # Railway/Docker often omit NLTK data; empty output broke inference (unknown / score 0 → human queue).
+        logger.warning(
+            "NLTK stopwords unavailable for language %r (%s). "
+            "Returning text without stopword removal. "
             "Install with: nltk.download('stopwords')",
             language,
             e,
         )
-        return ""
+        return text
     words = text.split()
     filtered_words = [word for word in words if word not in stop_words]
     return " ".join(filtered_words)

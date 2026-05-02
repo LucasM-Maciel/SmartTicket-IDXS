@@ -57,7 +57,13 @@ def train_model(
     model = LogisticRegression(max_iter=1500)
     model.fit(ticket_texts_train_vec, ticket_labels_train)
     predictions = model.predict(ticket_texts_test_vec)
-    print(classification_report(ticket_labels_test, predictions))
+    print(
+        classification_report(
+            ticket_labels_test,
+            predictions,
+            zero_division=0,
+        )
+    )
     joblib.dump(model, model_path or MODEL_PATH)
     joblib.dump(vectorizer, vectorizer_path or VECTORIZER_PATH)
 

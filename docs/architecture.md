@@ -1,6 +1,6 @@
 # System Architecture
 
-> Last updated: 2026-04-25
+> Last updated: 2026-05-02
 
 ## Overview
 
@@ -12,6 +12,18 @@ The system follows a layered architecture:
 - **Persistence layer** — SQLAlchemy models and repositories (`app/db/`)
 - **Utils layer** — text cleaning and normalization
 - **Data layer** — datasets (CSV), relational DB (PostgreSQL), model artifacts (`.pkl`)
+
+### Application assembly (`app/main.py`)
+
+- **`load_dotenv()`** runs before app wiring so **`DATABASE_URL`**, **`SMARTTICKET_*`**, and **`SMARTTICKET_LLM_MIN_SCORE`** resolve from a local `.env` in dev (never commit secrets).
+- **FastAPI `lifespan`:** on startup, **`ensure_nltk_stopwords()`** in **`app/core/nltk_bootstrap.py`** ensures the NLTK **stopwords** corpus exists (download when missing). Slim Docker/PaaS images often lack `nltk_data`; without it, **`normalize_text`** falls back to **passthrough**. First-time download needs outbound HTTPS to NLTK hosts — **air-gapped / locked egress:** pre-bake `nltk_data` or accept passthrough. See **`docs/security-and-deployment.md`**.
+- **Public OpenAPI:** by default **`/docs`**, **`/redoc`**, and the schema JSON are enabled. Production: set **`SMARTTICKET_DISABLE_OPENAPI`** (`app.core.config`) — see **`docs/security-and-deployment.md`**.
+- **Routers:** `app.include_router(router)` — ML and preprocessing stay in services/routes, not in `main.py`.
+
+### Database session lifecycle (`app/db/session.py`)
+
+- **`get_engine()` / `get_db`:** lazy engine + **`SessionLocal`** when **`DATABASE_URL`** is set; if unset, **`get_db` yields `None`** and persistence-required routes return **503**.
+- **`reset_db_engine_state()`:** disposes the cached engine and clears **`SessionLocal`** — root **`conftest.py`** invokes it **before and after** each test (with **`DATABASE_URL`** unset via **`autouse`**) so pytest never keeps a stale engine between cases.
 
 ---
 
@@ -214,7 +226,7 @@ Dataset
 - `app/db` — SQLAlchemy models (`Ticket`), session factory (`DATABASE_URL`), repository writes
 - `app/utils` — reusable text functions
 - `app/data` — datasets (not production DB)
-- `app/core` — configuration (`config.py`, **`triage_settings.py`**), limits; env keys in `api-contracts.md` / `.env.example`
+- `app/core` — configuration (`config.py`: paths + **`fastapi_documentation_kwargs`** / **`SMARTTICKET_DISABLE_OPENAPI`**, **`triage_settings.py`**), **`nltk_bootstrap.py`** (API startup NLTK stopwords), limits; env keys in `api-contracts.md` / `.env.example`
 - `db/migrations/` — hand-written SQL for PostgreSQL schema advances (e.g. add columns); not Alembic
 - `scripts/` — thin CLI wrappers (e.g. pytest from repo root, `post_test_ticket.py`); must call logic in `app/`, not duplicate it
 
@@ -259,7 +271,7 @@ Align with longer-term vision:
 | Backend / API | Python + FastAPI |
 | ML | Scikit-learn (TF-IDF + Logistic Regression) |
 | Persistence | SQLAlchemy + PostgreSQL (`DATABASE_URL`) |
-| LLM | OpenAI / LangChain deps installed; **`app/services/llm_service.py`** stub — not wired to routes |
+| LLM | **`app/services/llm_service.py`** placeholder only (not wired to routes). Optional OpenAI/LangChain lines in **`requirements.txt`** are **commented** until implementation. |
 | Database hosting | Supabase (MVP), Railway/RDS (production) *(examples)* |
 | WhatsApp | Z-API (Brazil) or Twilio *(planned)* |
 | Real-time | WebSockets via FastAPI — polling for demo |
