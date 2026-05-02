@@ -3,8 +3,8 @@
 Implement: lifespan, CORS, global exception handlers as needed. Routers live in
 ``app.api.routes`` — keep this file limited to app assembly.
 
-Do **not** put ML or preprocessing here; call ``predict_category`` only from
-route handlers (or a thin service).
+Do **not** put ML or preprocessing here; routes should call a thin service
+(e.g. ``classify_ticket``), not heavy pipeline code.
 """
 from dotenv import load_dotenv
 
