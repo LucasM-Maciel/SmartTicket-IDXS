@@ -1,13 +1,20 @@
 import logging
+from typing import Annotated, Literal
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 from fastapi.responses import JSONResponse
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session
 
-from app.api.schemas import PredictRequest, PredictResponse, HealthResponse
+from app.api.schemas import (
+    HealthResponse,
+    PredictRequest,
+    PredictResponse,
+    TicketQueueResponse,
+)
 from app.core.config import MODEL_PATH, VECTORIZER_PATH
 from app.core.triage_settings import get_llm_min_score
+from app.db.queue_repository import list_tickets_queue
 from app.db.repository import save_ticket_prediction
 from app.db.session import get_db
 from app.services.classifier import classify_ticket
@@ -63,6 +70,44 @@ def post_predict(
         score=out.score,
         urgency=urgency,
         queue_target=queue_target,
+    )
+
+
+@router.get("/tickets", response_model=TicketQueueResponse)
+def get_tickets(
+    db: Session | None = Depends(get_db),
+    queue_target: Annotated[
+        Literal["human", "llm"] | None,
+        Query(description="If set, only tickets routed to this queue."),
+    ] = None,
+    limit: Annotated[int, Query(ge=1, le=100, description="Page size (max 100).")] = 50,
+    offset: Annotated[int, Query(ge=0, description="Rows to skip for pagination.")] = 0,
+) -> TicketQueueResponse:
+    """List persisted tickets in queue order: urgency tier (HIGH→MEDIUM→LOW), then FIFO."""
+    if db is None:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Database persistence not configured.",
+        )
+    try:
+        rows, total = list_tickets_queue(
+            db,
+            queue_target=queue_target,
+            limit=limit,
+            offset=offset,
+        )
+    except SQLAlchemyError:
+        logger.exception("Database query failed while listing tickets.")
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Could not load tickets; database unavailable.",
+        )
+
+    return TicketQueueResponse(
+        items=rows,
+        total=total,
+        limit=limit,
+        offset=offset,
     )
 
 
