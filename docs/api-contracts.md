@@ -23,7 +23,7 @@ Matches the **“Technical SmartTicket MVP”** diagram: a **modular FastAPI** o
 | Path | Role |
 |------|------|
 | `GET /health` | Readiness: artifact *files* exist (paths from `app/core/config.py`, overridable via env — see *Conventions*). |
-| `POST /predict` | One-shot classification on a `text` string; returns `text` echo + `category` + `score`. |
+| `POST /predict` | One-shot classification on a `text` string; returns `text` echo + `category` + `score` + `urgency` + `queue_target`. |
 
 Optional later without changing the diagram’s core story: `GET /version` (debug only).
 
@@ -57,7 +57,7 @@ Optional later without changing the diagram’s core story: `GET /version` (debu
 
 ## `POST /predict` (technical MVP)
 
-**Purpose:** Run the ML pipeline and classifier on a **single** string — the stand-in for a **synthetic** ticket line from the diagram. After a successful prediction, the API **persists** raw text, processed text, category, and score when `DATABASE_URL` is configured (otherwise **503**).
+**Purpose:** Run the ML pipeline and classifier on a **single** string — the stand-in for a **synthetic** ticket line from the diagram. After a successful prediction, the API **persists** raw text, processed text, category, score, **urgency** (`HIGH` / `MEDIUM` / `LOW`), and **queue_target** (`human` / `llm`) when `DATABASE_URL` is configured (otherwise **503**). Rules live in `app/services/ticket_triage.py` and `app/core/triage_settings.py`.
 
 ### Request
 
@@ -75,10 +75,15 @@ Optional later without changing the diagram’s core story: `GET /version` (debu
 ```json
 {
   "text": "I want to cancel my order",
-  "category": "cancellation",
-  "score": 0.92
+  "category": "cancellation_request",
+  "score": 0.92,
+  "urgency": "HIGH",
+  "queue_target": "llm"
 }
 ```
+
+- `urgency` is derived from the predicted **category** (see `docs/project-context.md`).
+- `queue_target` uses the classification **score** vs `SMARTTICKET_LLM_MIN_SCORE` (default **0.75**): scores **≥** threshold → `llm`, otherwise `human`.
 
 ### Notes
 
@@ -99,6 +104,7 @@ Optional later without changing the diagram’s core story: `GET /version` (debu
   | Variable | Role |
   |----------|------|
   | `DATABASE_URL` | PostgreSQL URL for SQLAlchemy (**required** at runtime for successful `POST /predict`; see `.env.example`) |
+  | `SMARTTICKET_LLM_MIN_SCORE` | Minimum score to route to `queue_target: "llm"` (default **0.75**) |
   | `SMARTTICKET_MODEL_PATH` | Trained model `.pkl` |
   | `SMARTTICKET_VECTORIZER_PATH` | Vectorizer `.pkl` |
   | `SMARTTICKET_DATASET_PATH` | Training CSV (training script / notebooks) |
