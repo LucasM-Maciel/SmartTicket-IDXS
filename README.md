@@ -8,6 +8,16 @@
 
 ---
 
+## 🎬 Live Demo (Streamlit)
+
+Try the public demo:
+
+- [https://smartticket-idxs-5bxitlszgasizvdvd62lu8.streamlit.app](https://smartticket-idxs-5bxitlszgasizvdvd62lu8.streamlit.app)
+
+Demo setup and local/cloud instructions are in [`demo/README.md`](demo/README.md).
+
+---
+
 ## 🚀 Overview
 
 The **Intelligent Triage System** is a production-oriented application designed to process and understand unstructured text data such as support tickets, user requests, and operational messages.
