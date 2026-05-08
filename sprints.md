@@ -2,6 +2,7 @@
 
 > **Living document:** update checkboxes as work completes.  
 > **As of 2026-05-02:** **technical MVP closure is complete** (see `docs/project-context.md`): `GET /health`, `POST /predict` + persistence (`DATABASE_URL`), triage (`urgency` / `queue_target`), `GET /tickets` (queue order + pagination/filter), tests and docs aligned.
+> **Ownership note:** Sprint sections under each person reflect **planning/track ownership**, not code authorship. For shipped contributions/authorship, use `docs/team-responsibilities.md` and `docs/project-context.md`.
 
 ---
 
@@ -30,9 +31,9 @@ Define classification problem and initial dataset.
 - [x] Identify noise / limitations (noted for synthetic data)
 - [x] Validate usability for baseline model
 
-### Rafael
+### Rafael (track ownership)
 
-- [x] Define categories (business + UX) — see `docs/reuniao-regras-negocio.md` / vision docs
+- [x] Define categories (business + UX) — see product vision docs (`docs/product-vision-pt.md`, `docs/product-vision-en.md`)
 - [x] Create examples per category (evolving)
 
 ### Shared
@@ -56,18 +57,18 @@ Project structure, environment, app shell.
 - [x] Initial text cleaning / normalization (`clean_text`, `normalize_text`)
 - [x] Preprocessing steps defined and tested
 
-### Salim
+### Salim (track ownership)
 
 - [x] FastAPI project layout (`app/main.py`, `app/api/`) — **skeleton in place**
 - [x] `POST /predict` + `GET /health` **implemented** and aligned with `docs/api-contracts.md`
 - [x] Architecture baseline documented (`docs/architecture.md`, `docs/project-context.md`)
 
-### Rafael
+### Rafael (track ownership)
 
 - [x] README / docs index improved over time
 - [x] System overview in `docs/` (multiple files; no single `system-overview.md`)
 
-### Luís
+### Luís (track ownership)
 
 - [ ] Structure review (as needed)
 
@@ -91,15 +92,15 @@ Reliable reusable text preprocessing.
 - [x] Normalization + stopwords (`app/utils/`)
 - [x] Reusable utilities + pytest (`tests/test_preprocessing.py`, `test_pipeline.py`, …)
 
-### Salim
+### Salim (track ownership)
 
 - [ ] Integrate preprocessing **via** `predict_category` / API only (pipeline owned by Lucas — **no duplicate** `pipeline.py` under Salim)
 
-### Rafael
+### Rafael (track ownership)
 
 - [x] Test scenarios / expected outputs (partially in tests + docs)
 
-### Luís
+### Luís (track ownership)
 
 - [ ] Preprocessing review / perf (optional)
 
@@ -123,11 +124,11 @@ Train and persist classification model.
 - [x] Train/val split, `classification_report`, artifacts (`joblib`)
 - [x] Configurable columns/paths (`app/core/config.py`)
 
-### Rafael
+### Rafael (track ownership)
 
 - [x] Category validation examples (in docs / tests fixtures)
 
-### Luís
+### Luís (track ownership)
 
 - [ ] Model output review (optional)
 
@@ -151,7 +152,7 @@ Expose classification through the API.
 - [x] Lazy load + thread-safe cache, edge cases (`unknown` / missing artifacts)
 - [x] ML tests (`tests/test_predict.py`, fixtures, `conftest.py`)
 
-### Salim
+### Salim (track ownership)
 
 - [x] Wire `POST /predict` to `predict_category`
 - [x] Pydantic schemas (`app/api/schemas.py`) aligned with `docs/api-contracts.md`
@@ -159,11 +160,11 @@ Expose classification through the API.
 - [x] `tests/test_api.py`
 - [x] `GET /tickets` queue read (`queue_target`, `limit`, `offset`) + `tests/test_queue_api.py`
 
-### Rafael
+### Rafael (track ownership)
 
 - [ ] API usage examples in README or `docs/` once routes exist
 
-### Luís
+### Luís (track ownership)
 
 - [ ] Integration test support (optional)
 
@@ -185,15 +186,15 @@ Optional AI-generated responses (`app/services/llm_service.py`).
 
 - [ ] LLM client + context from classification + fallback
 
-### Salim
+### Salim (track ownership)
 
 - [ ] LLM in API flow + feature toggle
 
-### Rafael
+### Rafael (track ownership)
 
 - [ ] Prompt templates per category
 
-### Luís
+### Luís (track ownership)
 
 - [ ] Review latency / cost
 
@@ -215,15 +216,15 @@ Hardening before wider release.
 
 - [ ] Model / edge-case improvements
 
-### Salim
+### Salim (track ownership)
 
 - [ ] Error handling, API structure, DB integration complete
 
-### Rafael
+### Rafael (track ownership)
 
 - [ ] Final user-facing docs
 
-### Luís
+### Luís (track ownership)
 
 - [ ] Refactor / maintainability
 
@@ -252,7 +253,7 @@ Hardening before wider release.
 
 Real channel: WhatsApp → API → response.
 
-### Salim
+### Salim (track ownership)
 
 - [ ] Webhook endpoint, idempotency basics
 
@@ -260,11 +261,11 @@ Real channel: WhatsApp → API → response.
 
 - [ ] Real-time message shape compatibility with pipeline
 
-### Rafael
+### Rafael (track ownership)
 
 - [ ] Chat-oriented response patterns
 
-### Luís
+### Luís (track ownership)
 
 - [ ] E2E debugging
 
