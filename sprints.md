@@ -284,3 +284,176 @@ Real channel: WhatsApp → API → response.
 | 5–8 | Post-technical-MVP | LLM, hardening, WhatsApp, product E2E |
 
 **Rule:** if blocked &gt; 1 day on non-critical path → simplify and ship the next increment.
+
+
+---
+
+# Functional MVP — Sprints F1–F6
+
+> **Start:** May 2026
+> **Target:** pilot client validation in ~6 weeks
+> **Owner:** Lucas (solo development)
+>
+> **Confirmed decisions:**
+> - Channel: **Z-API** (MVP) → Twilio/Meta Cloud API (next milestone)
+> - Queue worker: **APScheduler** inside FastAPI (→ RabbitMQ when monolith splits into two APIs)
+> - Hosting: **Railway** (stays; Pro plan US$20 sufficient for 1–3 pilot clients)
+> - Attendant UI: **React + Next.js** (shadcn/ui, simple first, iterate later)
+> - LLM: **OpenAI GPT-4o mini** (feature-toggled via `SMARTTICKET_LLM_ENABLED`)
+> - Auth (pilot): NextAuth.js with credential provider (simple fixed users)
+
+---
+
+# Sprint F1 — Real dataset + PT-BR pipeline
+
+**Duration:** 5–7 days
+
+## Goal
+
+Replace synthetic dataset with real/realistic PT-BR data and make the preprocessing pipeline language-aware.
+
+### Lucas
+
+- [ ] **Dataset generation:** use GPT-4o to generate PT-BR variations per category (10 seed examples per category → 50+ variations → manual review)
+- [ ] **Dataset target:** ~400 examples minimum (80+ per category: `technical_issue`, `billing_inquiry`, `refund_request`, `cancellation_request`, `product_inquiry`)
+- [ ] **PT-BR pipeline:** extend `normalize_text` to load `stopwords('portuguese')` when `language='pt'`; update `run_pipeline` to accept/pass `language` param; add `SMARTTICKET_PIPELINE_LANGUAGE` env var (default `'en'`)
+- [ ] **NLTK bootstrap:** ensure `nltk_bootstrap.py` downloads stopwords for both `english` and `portuguese`
+- [ ] Retrain model with new dataset and evaluate with `classification_report`
+- [ ] Update `tests/test_normalizer.py` and `tests/test_pipeline.py` for PT-BR path
+- [ ] Update `.env.example` with `SMARTTICKET_PIPELINE_LANGUAGE`
+
+---
+
+# Sprint F2 — DB schema + contacts/messages
+
+**Duration:** 3–5 days
+
+## Goal
+
+Extend the database to support the full operational flow (contacts, messages, ticket status transitions).
+
+### Lucas
+
+- [ ] `contacts` table: `id` (UUID), `phone`, `name`, `channel`, `created_at`
+- [ ] `messages` table: `id`, `contact_id`, `ticket_id`, `direction` (`inbound`/`outbound`), `body`, `external_id` (BSP message id), `created_at`
+- [ ] Extend `tickets`: add `contact_id` (FK), `channel` (`whatsapp`/`api`), `status` transitions (`open` → `in_progress` → `resolved` / `escalated`)
+- [ ] SQL migration `db/migrations/002_functional_mvp_schema.sql`
+- [ ] SQLAlchemy models for `Contact` and `Message`
+- [ ] Repositories: `contact_repository.py`, `message_repository.py`
+- [ ] New API routes: `GET /tickets/{id}`, `PATCH /tickets/{id}` (status + urgency override), `POST /tickets/{id}/reply`
+- [ ] Update `docs/architecture.md` with new schema
+
+---
+
+# Sprint F3 — WhatsApp channel (Z-API)
+
+**Duration:** 5–7 days
+
+## Goal
+
+Receive and send WhatsApp messages via Z-API webhook.
+
+### Lucas
+
+- [ ] Webhook endpoint `POST /webhooks/whatsapp` with Z-API payload parsing
+- [ ] Idempotency: skip if `external_id` already processed (deduplicate on `messages.external_id`)
+- [ ] Extract contact (phone, name) → upsert `contacts`
+- [ ] Extract message text → run `classify_ticket` → persist ticket + message
+- [ ] Outbound: `app/services/channel/zapi_client.py` wrapping Z-API send-message HTTP call
+- [ ] Abstract BSP interface `app/services/channel/base.py` (Twilio swap = new file only)
+- [ ] Env vars: `ZAPI_INSTANCE_ID`, `ZAPI_TOKEN`, `ZAPI_BASE_URL` in `.env.example`
+- [ ] Basic tests for webhook parsing and idempotency
+- [ ] Channel provider swap via `SMARTTICKET_CHANNEL_PROVIDER` env var
+
+---
+
+# Sprint F4 — LLM integration + APScheduler worker
+
+**Duration:** 5–7 days
+
+## Goal
+
+Wire LLM auto-response for high-confidence tickets and add the queue worker with priority aging.
+
+### Lucas
+
+- [ ] Complete `app/services/llm_service.py`: OpenAI GPT-4o mini with context injection (`raw_text + category + score + urgency`)
+- [ ] Prompt templates per category (PT-BR) in `app/services/llm_prompts.py`
+- [ ] Feature toggle: `SMARTTICKET_LLM_ENABLED` (default `false`); fallback to `human` queue on error
+- [ ] Persist LLM response in `messages` table (direction `outbound`, source `llm`)
+- [ ] Send LLM response via Z-API outbound
+- [ ] **APScheduler worker** (inside FastAPI lifespan):
+  - Interval: `SMARTTICKET_WORKER_INTERVAL_SECONDS` (default 30s)
+  - Picks next `llm` queue ticket (HIGH → MEDIUM → LOW + FIFO)
+  - Calls LLM → sends reply → marks `resolved` or escalates to `human` on failure
+- [ ] **Priority aging job:** every hour, promotes `MEDIUM` tickets older than `SMARTTICKET_AGING_HOURS_MEDIUM` (default 4h) to `HIGH`
+- [ ] Env vars: `OPENAI_API_KEY`, `SMARTTICKET_LLM_ENABLED`, `SMARTTICKET_WORKER_INTERVAL_SECONDS`, `SMARTTICKET_AGING_HOURS_MEDIUM`
+- [ ] Tests for LLM service (mocked OpenAI), prompt rendering, aging logic
+
+> **Future migration note:** APScheduler → RabbitMQ when splitting into Ingestion API + Query API. APScheduler cannot coordinate work across multiple processes; RabbitMQ becomes necessary at that point.
+
+---
+
+# Sprint F5 — Attendant UI (Next.js)
+
+**Duration:** 7–10 days
+
+## Goal
+
+Functional attendant interface: queue view, ticket detail, reply, status management.
+
+### Lucas
+
+- [ ] Next.js project under `ui/` (App Router + TypeScript + Tailwind + shadcn/ui)
+- [ ] Auth: NextAuth.js with credentials provider (env-configured pilot users)
+- [ ] **Queue page** (`/queue`): tickets ordered by urgency, urgency + queue_target badges, polling every 10s
+- [ ] **Ticket detail** (`/tickets/[id]`): full conversation history, ticket metadata, LLM suggestion if available
+- [ ] **Reply action:** text input → `POST /tickets/{id}/reply` → UI update
+- [ ] **Status actions:** resolve, escalate, urgency override buttons
+- [ ] **Filter bar:** urgency, queue_target, status
+- [ ] Deploy to Railway as separate service; env `NEXT_PUBLIC_API_BASE_URL`
+- [ ] `ui/README.md` with local setup instructions
+
+---
+
+# Sprint F6 — E2E integration + pilot handoff
+
+**Duration:** 4–5 days
+
+## Goal
+
+Full flow validated end-to-end, pilot client onboarded.
+
+### Lucas
+
+- [ ] E2E smoke: WhatsApp message → webhook → classify → LLM reply → attendant sees in UI
+- [ ] Tune `SMARTTICKET_LLM_MIN_SCORE` and urgency mapping based on real data
+- [ ] `Dockerfile` for API + `ui/Dockerfile` for Next.js
+- [ ] `docker-compose.yml` for local dev (API + Postgres + UI)
+- [ ] Railway: two services (API + UI) sharing the same Postgres
+- [ ] Sentry free tier for error tracking on both services
+- [ ] Pilot client handoff: Z-API number configured, credentials, first real tickets flowing
+- [ ] Update `docs/project-context.md` and `README.md` marking Functional MVP closed
+
+---
+
+## Functional MVP Timeline
+
+| Sprint | Duration | Deliverable |
+|--------|----------|-------------|
+| F1 | Week 1 | PT-BR pipeline + real dataset + retrained model |
+| F2 | Week 1–2 | DB schema (contacts, messages, ticket status) + new API routes |
+| F3 | Week 2–3 | WhatsApp webhook (Z-API) inbound + outbound |
+| F4 | Week 3–4 | LLM integration + APScheduler worker + priority aging |
+| F5 | Week 4–5 | Next.js attendant UI (queue + detail + reply) |
+| F6 | Week 5–6 | E2E validation + Docker + Railway deploy + pilot handoff |
+
+---
+
+## Post-Functional MVP (next milestone)
+
+- Swap Z-API → Twilio / Meta Cloud API
+- APScheduler → RabbitMQ (trigger: split monolith into Ingestion API + Query API)
+- Next.js UI iteration (WebSocket real-time, analytics dashboard)
+- Feedback loop: agent corrections feed model retraining
+- Multi-client support (per-client category config + model artifacts)
