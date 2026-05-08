@@ -2,6 +2,13 @@
 
 **Project overview, setup, train/test commands, and roadmap:** see the [root README](../README.md).
 
+## Functional MVP
+
+| Document | Purpose |
+|----------|---------|
+| `functional-mvp-plan.md` | **Full Functional MVP plan** — decisions, sprints F1–F6, timeline, env vars, post-MVP roadmap |
+| `smartticket-functional-mvp-plan.html` | PDF-ready export of the Functional MVP plan (open in browser → Ctrl+P → Save as PDF) |
+
 ## Core references
 
 | Document | Purpose |
