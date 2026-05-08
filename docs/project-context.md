@@ -250,7 +250,7 @@ Directions **after** the core product path (API, DB, feedback loop) is stable �
 
 | Phase | Period | Goal |
 |---|---|---|
-| Technical MVP | Now → April 2026 | Classification + API working |
+| Technical MVP | ✅ Closed on 02/05/2026 | Classification + API/persistence/triage/queue read working |
 | Demo | May–June 2026 | Full system for pilot client demo |
 | Refinement | July–September 2026 | Queue + interface + WhatsApp + full DB |
 | Pilot deployment | October 2026 | First real client |

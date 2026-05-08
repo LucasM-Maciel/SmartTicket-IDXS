@@ -1,7 +1,7 @@
 # Sprint plan — SmartTicket-IDXS
 
 > **Living document:** update checkboxes as work completes.  
-> **As of 2026-04-12:** offline **pipeline + training + `predict_category` + ML unit tests** slice is done (see `docs/project-context.md`). **Next focus:** FastAPI, persistence, API tests (Salim track).
+> **As of 2026-05-02:** **technical MVP closure is complete** (see `docs/project-context.md`): `GET /health`, `POST /predict` + persistence (`DATABASE_URL`), triage (`urgency` / `queue_target`), `GET /tickets` (queue order + pagination/filter), tests and docs aligned.
 
 ---
 
@@ -9,9 +9,9 @@
 
 | Phase | Status |
 |-------|--------|
-| Sprints 0–3 (data, pipeline, training) | Largely **done** |
-| Sprint 4 (inference in API) | **Partial** — ML ready; HTTP routes still to wire |
-| Sprints 5+ (LLM, WhatsApp, hardening) | **Not started** (post-MVP / optional) |
+| Sprints 0–4 (foundation, pipeline, API + persistence) | **Done** (technical MVP closed) |
+| Sprint 5 (LLM integration) | **Not started** (stub only) |
+| Sprints 6+ (hardening, channels, product E2E) | **Planned / in progress by roadmap** |
 
 ---
 
@@ -59,7 +59,7 @@ Project structure, environment, app shell.
 ### Salim
 
 - [x] FastAPI project layout (`app/main.py`, `app/api/`) — **skeleton in place**
-- [ ] `POST /predict` + `POST /health` **implemented** and aligned with `docs/api-contracts.md`
+- [x] `POST /predict` + `GET /health` **implemented** and aligned with `docs/api-contracts.md`
 - [x] Architecture baseline documented (`docs/architecture.md`, `docs/project-context.md`)
 
 ### Rafael
@@ -153,10 +153,11 @@ Expose classification through the API.
 
 ### Salim
 
-- [ ] Wire `POST /predict` to `predict_category`
-- [ ] Pydantic schemas (`app/api/schemas.py`) = `docs/api-contracts.md`
-- [ ] `POST /health`
-- [ ] `tests/test_api.py`
+- [x] Wire `POST /predict` to `predict_category`
+- [x] Pydantic schemas (`app/api/schemas.py`) aligned with `docs/api-contracts.md`
+- [x] `GET /health`
+- [x] `tests/test_api.py`
+- [x] `GET /tickets` queue read (`queue_target`, `limit`, `offset`) + `tests/test_queue_api.py`
 
 ### Rafael
 
@@ -168,7 +169,7 @@ Expose classification through the API.
 
 ### Shared
 
-- [ ] End-to-end: HTTP → predict → response (DB persistence = next step)
+- [x] End-to-end: HTTP → predict → response with DB persistence (`DATABASE_URL`) + triage fields
 
 ---
 
@@ -278,7 +279,7 @@ Real channel: WhatsApp → API → response.
 | Sprint | Duration | Notes |
 |--------|----------|--------|
 | 0–2 | ~2–3 weeks | Mostly **done** |
-| 3–4 | ~2 weeks | Training **done**; API wiring **in progress** |
-| 5–8 | Optional / post-MVP | LLM, polish, WhatsApp |
+| 3–4 | ~2 weeks | Training + API/persistence/triage/queue read **done** |
+| 5–8 | Post-technical-MVP | LLM, hardening, WhatsApp, product E2E |
 
 **Rule:** if blocked &gt; 1 day on non-critical path → simplify and ship the next increment.
