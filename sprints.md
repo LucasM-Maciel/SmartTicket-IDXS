@@ -295,8 +295,8 @@ Real channel: WhatsApp → API → response.
 > **Owner:** Lucas (solo development)
 >
 > **Confirmed decisions:**
-> - Channel: **Z-API** (MVP) → Twilio/Meta Cloud API (next milestone)
-> - Queue worker: **APScheduler** inside FastAPI (→ RabbitMQ when monolith splits into two APIs)
+> - Channel: **Meta Cloud API** (MVP and final product baseline)
+> - Queue processing: **SQS + Lambda** for LLM queue; **PostgreSQL + APScheduler** for human queue (`queue_control`), with optional cron-job evolution
 > - Hosting: **Railway** (stays; Pro plan US$20 sufficient for 1–3 pilot clients)
 > - Attendant UI: **React + Next.js** (shadcn/ui, simple first, iterate later)
 > - LLM: **OpenAI GPT-4o mini** (feature-toggled via `SMARTTICKET_LLM_ENABLED`)
@@ -336,7 +336,7 @@ Extend the database to support the full operational flow (contacts, messages, ti
 
 - [ ] `contacts` table: `id` (UUID), `phone`, `name`, `channel`, `created_at`
 - [ ] `messages` table: `id`, `contact_id`, `ticket_id`, `direction` (`inbound`/`outbound`), `body`, `external_id` (BSP message id), `created_at`
-- [ ] Extend `tickets`: add `contact_id` (FK), `channel` (`whatsapp`/`api`), `status` transitions (`open` → `in_progress` → `resolved` / `escalated`)
+- [ ] Extend `tickets`: add `contact_id` (FK), `channel` (`whatsapp`/`api`), `queue_control` (`human_queue`/`llm_queue`), `status` transitions (`open` → `in_progress` → `resolved` / `escalated`)
 - [ ] SQL migration `db/migrations/002_functional_mvp_schema.sql`
 - [ ] SQLAlchemy models for `Contact` and `Message`
 - [ ] Repositories: `contact_repository.py`, `message_repository.py`
@@ -345,25 +345,25 @@ Extend the database to support the full operational flow (contacts, messages, ti
 
 ---
 
-# Sprint F3 — WhatsApp channel (Z-API)
+# Sprint F3 — WhatsApp channel (Meta Cloud API)
 
 **Duration:** 5–7 days
 
 ## Goal
 
-Receive and send WhatsApp messages via Z-API webhook.
+Receive and send WhatsApp messages via Meta Cloud API webhook.
 
 ### Lucas
 
-- [ ] Webhook endpoint `POST /webhooks/whatsapp` with Z-API payload parsing
+- [ ] Webhook endpoint `POST /webhooks/whatsapp` with Meta Cloud API payload parsing
 - [ ] Idempotency: skip if `external_id` already processed (deduplicate on `messages.external_id`)
 - [ ] Extract contact (phone, name) → upsert `contacts`
 - [ ] Extract message text → run `classify_ticket` → persist ticket + message
-- [ ] Outbound: `app/services/channel/zapi_client.py` wrapping Z-API send-message HTTP call
-- [ ] Abstract BSP interface `app/services/channel/base.py` (Twilio swap = new file only)
-- [ ] Env vars: `ZAPI_INSTANCE_ID`, `ZAPI_TOKEN`, `ZAPI_BASE_URL` in `.env.example`
+- [ ] Outbound: `app/services/channel/meta_client.py` wrapping Meta Cloud API send-message HTTP call
+- [ ] Abstract channel interface `app/services/channel/base.py` (provider adapter stays isolated)
+- [ ] Env vars: `META_WA_PHONE_NUMBER_ID`, `META_WA_ACCESS_TOKEN`, `META_WA_VERIFY_TOKEN`, `META_WA_API_VERSION` in `.env.example`
 - [ ] Basic tests for webhook parsing and idempotency
-- [ ] Channel provider swap via `SMARTTICKET_CHANNEL_PROVIDER` env var
+- [ ] Webhook verification challenge + token validation
 
 ---
 
@@ -381,7 +381,7 @@ Wire LLM auto-response for high-confidence tickets and add the queue worker with
 - [ ] Prompt templates per category (PT-BR) in `app/services/llm_prompts.py`
 - [ ] Feature toggle: `SMARTTICKET_LLM_ENABLED` (default `false`); fallback to `human` queue on error
 - [ ] Persist LLM response in `messages` table (direction `outbound`, source `llm`)
-- [ ] Send LLM response via Z-API outbound
+- [ ] Send LLM response via Meta Cloud API outbound
 - [ ] **APScheduler worker** (inside FastAPI lifespan):
   - Interval: `SMARTTICKET_WORKER_INTERVAL_SECONDS` (default 30s)
   - Picks next `llm` queue ticket (HIGH → MEDIUM → LOW + FIFO)
@@ -390,7 +390,7 @@ Wire LLM auto-response for high-confidence tickets and add the queue worker with
 - [ ] Env vars: `OPENAI_API_KEY`, `SMARTTICKET_LLM_ENABLED`, `SMARTTICKET_WORKER_INTERVAL_SECONDS`, `SMARTTICKET_AGING_HOURS_MEDIUM`
 - [ ] Tests for LLM service (mocked OpenAI), prompt rendering, aging logic
 
-> **Future migration note:** APScheduler → RabbitMQ when splitting into Ingestion API + Query API. APScheduler cannot coordinate work across multiple processes; RabbitMQ becomes necessary at that point.
+> **Queue evolution note:** final direction is SQS + Lambda for LLM queue; human queue remains PostgreSQL + APScheduler (or dedicated cron-job service) using `queue_control`.
 
 ---
 
@@ -432,7 +432,7 @@ Full flow validated end-to-end, pilot client onboarded.
 - [ ] `docker-compose.yml` for local dev (API + Postgres + UI)
 - [ ] Railway: two services (API + UI) sharing the same Postgres
 - [ ] Sentry free tier for error tracking on both services
-- [ ] Pilot client handoff: Z-API number configured, credentials, first real tickets flowing
+- [ ] Pilot client handoff: Meta phone number configured, credentials, first real tickets flowing
 - [ ] Update `docs/project-context.md` and `README.md` marking Functional MVP closed
 
 ---
@@ -442,8 +442,8 @@ Full flow validated end-to-end, pilot client onboarded.
 | Sprint | Duration | Deliverable |
 |--------|----------|-------------|
 | F1 | Week 1 | PT-BR pipeline + real dataset + retrained model |
-| F2 | Week 1–2 | DB schema (contacts, messages, ticket status) + new API routes |
-| F3 | Week 2–3 | WhatsApp webhook (Z-API) inbound + outbound |
+| F2 | Week 1–2 | DB schema (contacts, messages, ticket status + `queue_control`) + new API routes |
+| F3 | Week 2–3 | WhatsApp webhook (Meta Cloud API) inbound + outbound |
 | F4 | Week 3–4 | LLM integration + APScheduler worker + priority aging |
 | F5 | Week 4–5 | Next.js attendant UI (queue + detail + reply) |
 | F6 | Week 5–6 | E2E validation + Docker + Railway deploy + pilot handoff |
@@ -452,8 +452,8 @@ Full flow validated end-to-end, pilot client onboarded.
 
 ## Post-Functional MVP (next milestone)
 
-- Swap Z-API → Twilio / Meta Cloud API
-- APScheduler → RabbitMQ (trigger: split monolith into Ingestion API + Query API)
+- Keep Meta Cloud API as official channel baseline
+- Final evolution: **SQS + Lambda** for LLM queue; human queue stays on **PostgreSQL + APScheduler** using `queue_control` (may evolve to dedicated cron-job service)
 - Next.js UI iteration (WebSocket real-time, analytics dashboard)
 - Feedback loop: agent corrections feed model retraining
 - Multi-client support (per-client category config + model artifacts)

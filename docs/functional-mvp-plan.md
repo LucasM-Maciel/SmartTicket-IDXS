@@ -34,8 +34,8 @@ What the Functional MVP adds: real WhatsApp channel, LLM auto-reply, operational
 
 | Decision | Choice | When to revisit |
 |---|---|---|
-| WhatsApp channel | **Z-API** (MVP) | Swap to Twilio / Meta Cloud API before scaling past 2 clients |
-| Queue worker | **APScheduler** inside FastAPI | Migrate to RabbitMQ when splitting monolith into two APIs |
+| WhatsApp channel | **Meta Cloud API** (MVP and final product baseline) | Revisit only if provider constraints appear |
+| Queue processing | **SQS + Lambda** for LLM queue; **PostgreSQL + APScheduler** for human queue (`queue_control`) | Revisit when aging moves to dedicated cron/job service |
 | Hosting | **Railway Pro** (US$20/month) | Reassess when monthly cost exceeds US$40–50 or 5+ concurrent clients |
 | Attendant UI | **React + Next.js** (App Router) | Iterate on top, never rewrite |
 | LLM provider | **OpenAI GPT-4o mini** | Reassess cost/quality with real production data |
@@ -43,30 +43,30 @@ What the Functional MVP adds: real WhatsApp channel, LLM auto-reply, operational
 | Pipeline language | **PT-BR** from F1 onwards | Multilingual when international clients arrive |
 | Error tracking | **Sentry** free tier | Upgrade plan when client SLA requires it |
 
-### Z-API vs Twilio — why Z-API now
+### Meta Cloud API decision (MVP + final baseline)
 
-| | Z-API | Twilio / Meta Cloud API |
-|---|---|---|
-| Cost | ~R$150–250/month flat, no per-message fee | ~US$0.005–0.08 per conversation — expensive at volume |
-| Official | No (WhatsApp Web protocol) | Yes — certified Meta BSP |
-| Approval | Immediate | Meta Business Verification: 3–10 business days |
-| Risk | WhatsApp may ban number without warning | Very low |
-| Documentation | OK, PT-BR focused | Excellent |
-| Recommendation | Validate fast with pilot client | Production with real clients |
+| Decision factor | Meta Cloud API choice |
+|---|---|
+| Cost model | Pay-as-you-go (Meta conversation/template billing), no mandatory BSP subscription |
+| Channel trust | Official Meta stack, stronger commercial positioning with clients |
+| Bureaucracy | Requires Meta Business setup/verification and webhook verification flow |
+| Operational risk | Lower block risk versus unofficial providers |
+| Product fit | Better long-term baseline for MVP functional + final product |
+| Recommendation | Start directly with Meta Cloud API and keep provider abstraction in code |
 
-**Migration path:** implement `app/services/channel/twilio_client.py` against the same abstract interface. Change only `SMARTTICKET_CHANNEL_PROVIDER=twilio`. Zero rewrite elsewhere.
+**Implementation path:** use a provider adapter (`app/services/channel/base.py` + `meta_client.py`) so fallback providers remain possible without rewriting domain logic.
 
-### APScheduler vs RabbitMQ — why APScheduler now
+### Queue architecture decision (LLM queue vs human queue)
 
-APScheduler runs inside the FastAPI process — zero extra infrastructure, ~100 lines to implement. Sufficient for 1–3 pilot clients on a single process.
+LLM queue will use **SQS + Lambda** (event-driven). Human queue remains in **PostgreSQL + APScheduler**, controlled by `queue_control` and urgency rules.
 
-RabbitMQ becomes necessary when:
-- Splitting into **Ingestion API + Query API** (APScheduler cannot coordinate across processes)
-- Needing **guaranteed delivery** (messages survive process crashes)
-- **Horizontal worker scaling** (multiple workers consuming the same queue)
-- High throughput with many concurrent clients
+Current split rationale:
+- LLM processing benefits from event-driven fan-out and retry semantics (SQS + Lambda)
+- Human queue keeps deterministic business ordering in SQL (HIGH → MEDIUM → LOW + FIFO)
+- `queue_control` keeps operational state transitions explicit (`human_queue` / `llm_queue`)
+- Aging stays in human queue logic; may move from APScheduler to dedicated cron/job service later
 
-Decision: APScheduler for Functional MVP → RabbitMQ when the monolith splits. This is recorded in `docs/adr/` as a planned evolution, not a surprise.
+Decision: for final-product direction (for now), do **not** adopt RabbitMQ; use SQS + Lambda for LLM queue and keep human queue in PostgreSQL + APScheduler/cron with `queue_control`.
 
 ---
 
@@ -111,7 +111,7 @@ Decision: APScheduler for Functional MVP → RabbitMQ when the monolith splits. 
 
 - [ ] `contacts` table: `id` (UUID), `phone`, `name`, `channel`, `created_at`
 - [ ] `messages` table: `id`, `contact_id`, `ticket_id`, `direction` (`inbound`/`outbound`), `body`, `external_id` (BSP message id), `created_at`
-- [ ] Extend `tickets`: add `contact_id` (FK), `channel` (`whatsapp`/`api`), `status` transitions (`open` → `in_progress` → `resolved`/`escalated`)
+- [ ] Extend `tickets`: add `contact_id` (FK), `channel` (`whatsapp`/`api`), `queue_control` (`human_queue`/`llm_queue`), `status` transitions (`open` → `in_progress` → `resolved`/`escalated`)
 - [ ] SQL migration: `db/migrations/002_functional_mvp_schema.sql`
 
 #### SQLAlchemy + Repositories
@@ -132,29 +132,29 @@ Decision: APScheduler for Functional MVP → RabbitMQ when the monolith splits. 
 
 ---
 
-### Sprint F3 — WhatsApp channel (Z-API)
+### Sprint F3 — WhatsApp channel (Meta Cloud API)
 
 **Duration:** 5–7 days · Week 2–3
 
 #### Inbound (receive messages)
 
-- [ ] Endpoint `POST /webhooks/whatsapp` with Z-API payload parsing
-- [ ] Idempotency: check if `external_id` already exists in `messages` before processing (prevents duplicates on Z-API retries)
+- [ ] Endpoint `POST /webhooks/whatsapp` with Meta Cloud API payload parsing
+- [ ] Idempotency: check if `external_id` already exists in `messages` before processing (prevents duplicate retries)
 - [ ] Extract contact (phone, name) → upsert `contacts`
 - [ ] Extract message text → run `classify_ticket` → persist ticket + message (inbound)
 
 #### Outbound (send messages)
 
-- [ ] `app/services/channel/zapi_client.py`: wraps Z-API send-message HTTP call
-- [ ] Abstract interface `app/services/channel/base.py` with `send_message(phone, text)` method — Twilio swap = new file only
-- [ ] Channel provider swap via env var `SMARTTICKET_CHANNEL_PROVIDER` (`zapi`/`twilio`)
+- [ ] `app/services/channel/meta_client.py`: wraps Meta Cloud API send-message HTTP call
+- [ ] Abstract interface `app/services/channel/base.py` with `send_message(phone, text)` method — provider adapter stays isolated
+- [ ] Webhook verification challenge + token validation
 
 #### Config + Tests
 
-- [ ] Env vars: `ZAPI_INSTANCE_ID`, `ZAPI_TOKEN`, `ZAPI_BASE_URL`, `SMARTTICKET_CHANNEL_PROVIDER` in `.env.example`
+- [ ] Env vars: `META_WA_PHONE_NUMBER_ID`, `META_WA_ACCESS_TOKEN`, `META_WA_VERIFY_TOKEN`, `META_WA_API_VERSION` in `.env.example`
 - [ ] Tests: webhook parsing, idempotency logic, mocked outbound HTTP
 
-> **Future migration:** implement `app/services/channel/twilio_client.py` against the same interface. Change only `SMARTTICKET_CHANNEL_PROVIDER=twilio`.
+> **Fallback option:** keep provider abstraction so Z-API/Twilio adapters can be added later only if needed.
 
 **Exit criterion:** WhatsApp message → classified ticket in the database.
 
@@ -170,7 +170,7 @@ Decision: APScheduler for Functional MVP → RabbitMQ when the monolith splits. 
 - [ ] PT-BR prompt templates per category in `app/services/llm_prompts.py`
 - [ ] Feature toggle: `SMARTTICKET_LLM_ENABLED` (default `false`); fallback to `human` queue on LLM error
 - [ ] LLM response persisted in `messages` (direction `outbound`, source `llm`)
-- [ ] Send response via Z-API outbound
+- [ ] Send response via Meta Cloud API outbound
 
 #### APScheduler Worker (inside FastAPI lifespan)
 
@@ -190,7 +190,7 @@ Decision: APScheduler for Functional MVP → RabbitMQ when the monolith splits. 
 - [ ] Env vars: `OPENAI_API_KEY`, `SMARTTICKET_LLM_ENABLED`, `SMARTTICKET_WORKER_INTERVAL_SECONDS`, `SMARTTICKET_AGING_HOURS_MEDIUM`
 - [ ] Tests: LLM service (mocked OpenAI), prompt rendering, aging logic
 
-> **Future migration note:** APScheduler → RabbitMQ when splitting into Ingestion API + Query API. APScheduler cannot coordinate work across multiple processes.
+> **Queue evolution note:** final direction is SQS + Lambda for LLM queue; human queue remains PostgreSQL + APScheduler (or dedicated cron/job service) using `queue_control`.
 
 **Exit criterion:** full LLM path end-to-end working with feature toggle.
 
@@ -257,7 +257,7 @@ Decision: APScheduler for Functional MVP → RabbitMQ when the monolith splits. 
 
 #### Pilot handoff
 
-- [ ] Z-API number configured on production environment
+- [ ] Meta phone number configured on production environment
 - [ ] Attendant credentials created and delivered
 - [ ] First real tickets flowing and being processed
 - [ ] Update `docs/project-context.md` and `README.md` marking Functional MVP closed
@@ -271,8 +271,8 @@ Decision: APScheduler for Functional MVP → RabbitMQ when the monolith splits. 
 | Sprint | Duration | Deliverable |
 |--------|----------|-------------|
 | F1 | Week 1 | PT-BR pipeline + real dataset + retrained model |
-| F2 | Week 1–2 | DB schema (contacts, messages, ticket status) + new API routes |
-| F3 | Week 2–3 | WhatsApp webhook (Z-API) inbound + outbound |
+| F2 | Week 1–2 | DB schema (contacts, messages, ticket status + `queue_control`) + new API routes |
+| F3 | Week 2–3 | WhatsApp webhook (Meta Cloud API) inbound + outbound |
 | F4 | Week 3–4 | LLM integration + APScheduler worker + priority aging |
 | F5 | Week 4–5 | Next.js attendant UI (queue + detail + reply) |
 | F6 | Week 5–6 | E2E validation + Docker + Railway deploy + pilot handoff |
@@ -287,10 +287,10 @@ Decision: APScheduler for Functional MVP → RabbitMQ when the monolith splits. 
 | `SMARTTICKET_LLM_MIN_SCORE` | `0.75` | Technical | Min score for LLM routing |
 | `SMARTTICKET_DISABLE_OPENAPI` | `false` | Technical | Hide /docs and /redoc in production |
 | `SMARTTICKET_PIPELINE_LANGUAGE` | `en` | F1 | NLP pipeline language (`pt` for PT-BR) |
-| `SMARTTICKET_CHANNEL_PROVIDER` | `zapi` | F3 | Channel provider (`zapi`/`twilio`) |
-| `ZAPI_INSTANCE_ID` | — | F3 | Z-API instance ID |
-| `ZAPI_TOKEN` | — | F3 | Z-API auth token |
-| `ZAPI_BASE_URL` | — | F3 | Z-API base URL |
+| `META_WA_PHONE_NUMBER_ID` | — | F3 | Meta WhatsApp phone number ID |
+| `META_WA_ACCESS_TOKEN` | — | F3 | Meta Cloud API access token |
+| `META_WA_VERIFY_TOKEN` | — | F3 | Webhook verification token |
+| `META_WA_API_VERSION` | `v20.0` | F3 | Meta Graph API version for WhatsApp endpoints |
 | `OPENAI_API_KEY` | — | F4 | OpenAI API key |
 | `SMARTTICKET_LLM_ENABLED` | `false` | F4 | Enable LLM auto-reply path |
 | `SMARTTICKET_WORKER_INTERVAL_SECONDS` | `30` | F4 | APScheduler worker interval |
@@ -303,9 +303,9 @@ Decision: APScheduler for Functional MVP → RabbitMQ when the monolith splits. 
 
 | Item | Trigger | Impact |
 |---|---|---|
-| Z-API → Twilio / Meta Cloud API | Before scaling past 2 paying clients | Channel stability, lower block risk, HSM templates |
-| APScheduler → RabbitMQ | When splitting monolith into Ingestion + Query API | Guaranteed delivery, multiple workers, dead-letter queue |
+| Keep Meta Cloud API as baseline | Continuous | Official channel positioning and lower long-term operational risk |
+| SQS + Lambda for LLM queue (no RabbitMQ) | During split to Ingestion + Query API | Event-driven scaling and retry semantics for LLM workload |
 | Next.js UI iteration | After pilot feedback | WebSocket real-time, analytics dashboard, better UX |
 | Feedback loop | When 200+ real corrected tickets exist | Agent corrections feed model retraining |
 | Multi-client support | When 2+ paying clients | Per-client category config + model artifacts |
-| Monolith split (Ingestion + Query API) | When volume justifies independent scaling | Final product architecture |
+| Human queue stays SQL-driven (`queue_control` + APScheduler/cron) | During and after split | Preserves deterministic business priority and aging logic |
